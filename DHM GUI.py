@@ -82,8 +82,8 @@ def enable_rest():
 #Back-End
 
 def load_image(dest, dropdown_var=None, dropdown_widget=None):
-    file_path = filedialog.askopenfilename(
-        title="Select Image",
+    file_paths = filedialog.askopenfilenames(
+        title="Select Image(s)",
         filetypes=[
             ("Bitmap files", "*.bmp"),
             ("TIFF files", "*.tif"),
@@ -91,36 +91,43 @@ def load_image(dest, dropdown_var=None, dropdown_widget=None):
         ]
     )
 
-    if not file_path:
-        print("No file selected.")
+    if not file_paths:
+        print("No file(s) selected.")
         return
 
     try:
-        img = Image.open(file_path).convert("L")
-        title = os.path.basename(file_path)
-        img_array = np.array(img)
-
         if isinstance(dest, dict):
-            # Loading an image into the dictionary
-            dest[title] = img_array
+            # Handle multiple image loading into dictionary
+            for file_path in file_paths:
+                img = Image.open(file_path).convert("L")
+                title = os.path.basename(file_path)
+                dest[title] = np.array(img)
+
+            # Update dropdown menu
             if dropdown_var and dropdown_widget:
                 menu = dropdown_widget["menu"]
                 menu.delete(0, "end")
                 for item in dest:
                     menu.add_command(label=item, command=tk._setit(dropdown_var, item))
-                dropdown_var.set(title)
+                dropdown_var.set(list(dest.keys())[0])  # Set first loaded image as selected
         else:
-            # Loading reference image
+            # Handle single reference image
+            img = Image.open(file_paths[0]).convert("L")
+            title = os.path.basename(file_paths[0])
+            img_array = np.array(img)
+
+            global reference
             global reference_label_var
-            reference_label_var.set(title)
-            global reference
-            global reference
             reference = img_array
+            reference_label_var.set(title)
+
         enable_phase_computation()
+
         global image_label_var
         print(image_label_var.get())
     except Exception as e:
         print("Image loading failed:", e)
+
 
 
 
