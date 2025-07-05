@@ -60,7 +60,7 @@ def show_figure_in_new_window(fig, title="Figure"):
 #function used to ensure order of operations by user / enabling program features only after images are loaded
 def enable_phase_computation():
     global run_phase_button
-    if (len(images_dict.keys()) > 0) and reference is not None:
+    if (len(images_dict.keys()) > 0) and (len(images_dict.keys()) > 0):
         run_phase_button.config(state='normal')
 
 ######################################################################################################################
@@ -182,10 +182,12 @@ def check_spectrum(calledFromFunction=False):
             return(A1_shiftft, mask_bool, max_y, max_x)
 
 
-
 def run_phase_difference(calledFromFunction=False):
-    global unwrapped_psi_image, wavelength_var, pixel_size_var, magnification_var, delta_ri_var, dc_remove_var, filter_type_var, filter_size_var, image_label_var
-    global images_dict, reference
+    global unwrapped_psi_image
+    global wavelength_var, pixel_size_var, magnification_var, delta_ri_var
+    global dc_remove_var, filter_type_var, filter_size_var
+    global image_label_var, reference_label_var
+    global images_dict, reference_dict
     global vmin, vmax
 
     lambda_ = float(wavelength_var.get())
@@ -197,7 +199,7 @@ def run_phase_difference(calledFromFunction=False):
     filter_size = int(filter_size_var.get())
 
     A1 = images_dict.get(image_label_var.get())
-    print(np.mean(A1))
+    print("Image mean:", np.mean(A1))
 
     Ny, Nx = A1.shape
     A1_shiftft = FFT_calc(A1)
@@ -215,8 +217,8 @@ def run_phase_difference(calledFromFunction=False):
     filt_spec = np.roll(np.roll(filt_spec, shift_y, axis=0), shift_x, axis=1)
     obj_image = np.fft.ifft2(filt_spec)
 
-    A2 = reference
-    print(np.mean(A2))
+    A2 = reference_dict.get(reference_label_var.get())
+    print("Reference mean:", np.mean(A2))
     A2_shiftft = FFT_calc(A2)
     ref_filt_spec = A2_shiftft * mask_bool
     ref_filt_spec = np.roll(np.roll(ref_filt_spec, shift_y, axis=0), shift_x, axis=1)
