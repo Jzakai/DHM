@@ -60,7 +60,7 @@ def show_figure_in_new_window(fig, title="Figure"):
 #function used to ensure order of operations by user / enabling program features only after images are loaded
 def enable_phase_computation():
     global run_phase_button
-    if (len(images_dict.keys()) > 0) and (len(images_dict.keys()) > 0):
+    if (len(images_dict.keys()) > 0) and (len(reference_dict.keys()) > 0):
         run_phase_button.config(state='normal')
 
 ######################################################################################################################
@@ -198,93 +198,90 @@ def run_phase_difference(calledFromFunction=False):
     filter_type = filter_type_var.get()
     filter_size = int(filter_size_var.get())
 
-    A1 = images_dict.get(image_label_var.get())
-    print("Image mean:", np.mean(A1))
+    for img_name, A1 in images_dict.items():
+        for ref_name, A2 in reference_dict.items():
+            print(f"Processing: Image = {img_name}, Reference = {ref_name}")
+            print("Image mean:", np.mean(A1))
+            print("Reference mean:", np.mean(A2))
 
-    Ny, Nx = A1.shape
-    A1_shiftft = FFT_calc(A1)
+            Ny, Nx = A1.shape
+            A1_shiftft = FFT_calc(A1)
 
-    center_y, center_x = Ny // 2, Nx // 2
-    temp = np.abs(A1_shiftft.copy())
-    temp[center_y - dc_out:center_y + dc_out, center_x - dc_out:center_x + dc_out] = 0
-    max_y, max_x = np.unravel_index(np.argmax(temp), temp.shape)
-    mask_bool = create_mask((Ny, Nx), (max_y, max_x), filter_size, kind=filter_type)
+            center_y, center_x = Ny // 2, Nx // 2
+            temp = np.abs(A1_shiftft.copy())
+            temp[center_y - dc_out:center_y + dc_out, center_x - dc_out:center_x + dc_out] = 0
+            max_y, max_x = np.unravel_index(np.argmax(temp), temp.shape)
+            mask_bool = create_mask((Ny, Nx), (max_y, max_x), filter_size, kind=filter_type)
 
-    filt_spec = A1_shiftft * mask_bool
-    cy, cx = np.array(mask_bool.shape) // 2
-    shift_y = cy - max_y
-    shift_x = cx - max_x
-    filt_spec = np.roll(np.roll(filt_spec, shift_y, axis=0), shift_x, axis=1)
-    obj_image = np.fft.ifft2(filt_spec)
+            filt_spec = A1_shiftft * mask_bool
+            cy, cx = np.array(mask_bool.shape) // 2
+            shift_y = cy - max_y
+            shift_x = cx - max_x
+            filt_spec = np.roll(np.roll(filt_spec, shift_y, axis=0), shift_x, axis=1)
+            obj_image = np.fft.ifft2(filt_spec)
 
-    A2 = reference_dict.get(reference_label_var.get())
-    print("Reference mean:", np.mean(A2))
-    A2_shiftft = FFT_calc(A2)
-    ref_filt_spec = A2_shiftft * mask_bool
-    ref_filt_spec = np.roll(np.roll(ref_filt_spec, shift_y, axis=0), shift_x, axis=1)
-    ref_image = np.fft.ifft2(ref_filt_spec)
+            A2_shiftft = FFT_calc(A2)
+            ref_filt_spec = A2_shiftft * mask_bool
+            ref_filt_spec = np.roll(np.roll(ref_filt_spec, shift_y, axis=0), shift_x, axis=1)
+            ref_image = np.fft.ifft2(ref_filt_spec)
 
-    o1 = obj_image / ref_image
-    phase1 = np.angle(o1)
-    phase1[phase1 < 0] += 2 * np.pi
+            o1 = obj_image / ref_image
+            phase1 = np.angle(o1)
+            phase1[phase1 < 0] += 2 * np.pi
 
-    obj_img = np.fft.fft2(np.fft.fftshift(filt_spec))
-    int_obj = np.abs(obj_img) ** 2
-    int_obj = (int_obj - np.min(int_obj)) / np.max(int_obj)
+            obj_img = np.fft.fft2(np.fft.fftshift(filt_spec))
+            int_obj = np.abs(obj_img) ** 2
+            int_obj = (int_obj - np.min(int_obj)) / np.max(int_obj)
 
-    Fs_x = 1 / cam_pix_size
-    Fs_y = 1 / cam_pix_size
-    dFx = Fs_x / Nx
-    dFy = Fs_y / Ny
-    Fx = np.linspace(-Fs_x / 2, Fs_x / 2 - dFx, Nx)
-    Fy = np.linspace(-Fs_y / 2, Fs_y / 2 - dFy, Ny)
+            Fs_x = 1 / cam_pix_size
+            Fs_y = 1 / cam_pix_size
+            dFx = Fs_x / Nx
+            dFy = Fs_y / Ny
+            Fx = np.linspace(-Fs_x / 2, Fs_x / 2 - dFx, Nx)
+            Fy = np.linspace(-Fs_y / 2, Fs_y / 2 - dFy, Ny)
 
-    unwrapped_psi = Fast_Unwrap(Fx, Fy, phase1)
-    unwrapped_psi -= np.min(unwrapped_psi)
+            unwrapped_psi = Fast_Unwrap(Fx, Fy, phase1)
+            unwrapped_psi -= np.min(unwrapped_psi)
 
-    mean = np.mean(unwrapped_psi)
+            mean = np.mean(unwrapped_psi)
+            psi_inverted = 2 * mean - unwrapped_psi
 
-    psi_inverted = 2 * mean - unwrapped_psi
+            clean_psi = np.copy(unwrapped_psi)
+            clean_psi[unwrapped_psi < mean] = mean
 
-    clean_psi = np.copy(unwrapped_psi)
-    clean_psi[unwrapped_psi < mean] = mean
+            clean_psi_inverted = np.copy(psi_inverted)
+            clean_psi_inverted[psi_inverted < mean] = mean
 
-    clean_psi_inverted = np.copy(psi_inverted)
-    clean_psi_inverted[psi_inverted < mean] = mean
+            combined_clean = np.maximum(clean_psi, clean_psi_inverted)
 
-    combined_clean = np.maximum(clean_psi, clean_psi_inverted)
+            vmin = min(np.min(unwrapped_psi), np.min(psi_inverted), np.min(combined_clean))
+            vmax = max(np.max(unwrapped_psi), np.max(psi_inverted), np.max(combined_clean))
 
-    vmin = min(np.min(unwrapped_psi), np.min(psi_inverted), np.min(combined_clean))
-    vmax = max(np.max(unwrapped_psi), np.max(psi_inverted), np.max(combined_clean))
+            if not calledFromFunction:
+                vmin, vmax = np.min(unwrapped_psi), np.max(unwrapped_psi)
 
-    if not calledFromFunction:
-        vmin, vmax = np.min(unwrapped_psi), np.max(unwrapped_psi)
+                fig, ax = plt.subplots(figsize=(8, 6))
 
-        fig, ax = plt.subplots(figsize=(8, 6))
+                if type_var.get() == "1 Beam":
+                    im = ax.imshow(combined_clean, cmap='jet', vmin=vmin, vmax=vmax)
+                    ax.set_title(f'Combined Phase: {img_name} vs {ref_name}')
+                    ax.axis('off')
+                    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+                    unwrapped_psi = combined_clean
+                else:
+                    im = ax.imshow(unwrapped_psi, cmap='jet')
+                    ax.set_title(f'Unwrapped Phase: {img_name} vs {ref_name}')
+                    ax.axis('off')
+                    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-        if type_var.get() == "1 Beam":
-            im = ax.imshow(combined_clean, cmap='jet', vmin=vmin, vmax=vmax)
-            ax.set_title('Combined Unwrapped Phase')
-            ax.axis('off')
-            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-            unwrapped_psi = combined_clean
-        else:
-            im = ax.imshow(unwrapped_psi, cmap='jet')
-            ax.set_title('Unwrapped Phase')
-            ax.axis('off')
-            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-
-        unwrapped_psi_image = unwrapped_psi
-        fig.tight_layout()
-
-        show_figure_in_new_window(fig, title="Phase Visualization")
-
-    else:
-        if type_var.get() == "1 Beam":
-            unwrapped_psi = combined_clean
-        unwrapped_psi_image = unwrapped_psi
-        return unwrapped_psi
-
+                unwrapped_psi_image = unwrapped_psi
+                fig.tight_layout()
+                show_figure_in_new_window(fig, title=f"Phase: {img_name} vs {ref_name}")
+            else:
+                if type_var.get() == "1 Beam":
+                    unwrapped_psi = combined_clean
+                unwrapped_psi_image = unwrapped_psi
+                # return here is ambiguous: maybe return dict of results if needed?
 
 
 
