@@ -254,13 +254,11 @@ def run_phase_difference(calledFromFunction=False):
 
             combined_clean = np.maximum(clean_psi, clean_psi_inverted)
 
-            vmin = min(np.min(unwrapped_psi), np.min(psi_inverted), np.min(combined_clean))
-            vmax = max(np.max(unwrapped_psi), np.max(psi_inverted), np.max(combined_clean))
-            vmin, vmax = np.min(unwrapped_psi), np.max(unwrapped_psi)
-            fig, ax = plt.subplots(figsize=(8, 6))
-            im = ax.imshow(combined_clean, cmap='jet', vmin=vmin, vmax=vmax)
-            show_figure_in_new_window(fig, title=f"Phase: {img_name} vs {ref_name}")
-              
+            normalized = (unwrapped_psi - np.min(unwrapped_psi)) / (np.max(unwrapped_psi) - np.min(unwrapped_psi))
+            img_uint8 = (normalized * 255).astype(np.uint8)
+
+            img_pil = Image.fromarray(img_uint8)
+            img_pil.save(f"phase_{img_name}_vs_{ref_name}.png")
 
 
 root.title("Image Plane DHM")
