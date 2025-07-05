@@ -22,7 +22,7 @@ root = tk.Tk()
 
 #users imported images
 images_dict = {}
-reference = None
+reference_dict = {}
 
 #variables to hold images for functions
 spectrum_image = unwrapped_psi_image = roi_image = cleaned_roi_image = thickness_2d_image = thickness_3d_image = thickness_1d_image = None
@@ -66,7 +66,7 @@ def enable_phase_computation():
 ######################################################################################################################
 #Back-End
 
-def load_image(dest, dropdown_var=None, dropdown_widget=None):
+def load_image(dest, dropdown_var=None, dropdown_widget=None, label_var=None):
     file_paths = filedialog.askopenfilenames(
         title="Select Image(s)",
         filetypes=[
@@ -81,35 +81,30 @@ def load_image(dest, dropdown_var=None, dropdown_widget=None):
         return
 
     try:
-        if isinstance(dest, dict):
-            # Handle multiple image loading into dictionary
-            for file_path in file_paths:
-                img = Image.open(file_path).convert("L")
-                title = os.path.basename(file_path)
-                dest[title] = np.array(img)
+        for file_path in file_paths:
+            img = Image.open(file_path).convert("L")
+            title = os.path.basename(file_path)
+            dest[title] = np.array(img)
 
-            # Update dropdown menu
-            if dropdown_var and dropdown_widget:
-                menu = dropdown_widget["menu"]
-                menu.delete(0, "end")
-                for item in dest:
-                    menu.add_command(label=item, command=tk._setit(dropdown_var, item))
-                dropdown_var.set(list(dest.keys())[0])  # Set first loaded image as selected
-        else:
-            # Handle single reference image
-            img = Image.open(file_paths[0]).convert("L")
-            title = os.path.basename(file_paths[0])
-            img_array = np.array(img)
+        first_title = os.path.basename(file_paths[0])
 
-            global reference
-            global reference_label_var
-            reference = img_array
-            reference_label_var.set(title)
+        # Update dropdown menu if provided
+        if dropdown_var and dropdown_widget:
+            menu = dropdown_widget["menu"]
+            menu.delete(0, "end")
+            for item in dest:
+                menu.add_command(label=item, command=tk._setit(dropdown_var, item))
+            dropdown_var.set(first_title)
+
+        # Update label_var if provided (to show first loaded image name)
+        if label_var:
+            label_var.set(first_title)
 
         enable_phase_computation()
 
         global image_label_var
         print(image_label_var.get())
+
     except Exception as e:
         print("Image loading failed:", e)
 
@@ -347,13 +342,27 @@ reference_label_var = tk.StringVar(value="No Reference Selected")
 images_panel = tk.LabelFrame(root, text="Images", padx=10, pady=10, font=('Arial', 10, 'bold'))
 images_panel.grid(row=3, column=0, columnspan=4, pady=10)
 
-Button(images_panel, text="Load Image", command=lambda: load_image(images_dict, image_label_var, image_dropdown), width=15).grid(row=3, column=1, padx=10, pady=5)
-Button(images_panel, text="Load Reference", command=lambda: load_image(reference), width=15).grid(row=3, column=2, padx=10, pady=5)
 
-image_label_var = tk.StringVar()
-image_label_var.set("None Selected")
+# Define label vars
+image_label_var = tk.StringVar(value="None Selected")
+reference_label_var = tk.StringVar(value="None Selected")
+
+# Dropdowns
 image_dropdown = tk.OptionMenu(images_panel, image_label_var, "None Available")
 image_dropdown.grid(row=4, column=1, pady=(0, 2))
+
+reference_dropdown = tk.OptionMenu(images_panel, reference_label_var, "None Available")
+reference_dropdown.grid(row=4, column=2, pady=(0, 2))
+
+# Buttons
+Button(images_panel, text="Load Image",
+       command=lambda: load_image(images_dict, image_label_var, image_dropdown),
+       width=15).grid(row=3, column=1, padx=10, pady=5)
+
+Button(images_panel, text="Load Reference",
+       command=lambda: load_image(reference_dict, reference_label_var, reference_dropdown),
+       width=15).grid(row=3, column=2, padx=10, pady=5)
+
 
 Label(images_panel, textvariable=image_label_var).grid(row=4, column=1, pady=(0, 2))
 Label(images_panel, textvariable=reference_label_var).grid(row=4, column=2, pady=(0, 5))
