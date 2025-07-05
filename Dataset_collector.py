@@ -256,33 +256,11 @@ def run_phase_difference(calledFromFunction=False):
 
             vmin = min(np.min(unwrapped_psi), np.min(psi_inverted), np.min(combined_clean))
             vmax = max(np.max(unwrapped_psi), np.max(psi_inverted), np.max(combined_clean))
-
-            if not calledFromFunction:
-                vmin, vmax = np.min(unwrapped_psi), np.max(unwrapped_psi)
-
-                fig, ax = plt.subplots(figsize=(8, 6))
-
-                if type_var.get() == "1 Beam":
-                    im = ax.imshow(combined_clean, cmap='jet', vmin=vmin, vmax=vmax)
-                    ax.set_title(f'Combined Phase: {img_name} vs {ref_name}')
-                    ax.axis('off')
-                    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-                    unwrapped_psi = combined_clean
-                else:
-                    im = ax.imshow(unwrapped_psi, cmap='jet')
-                    ax.set_title(f'Unwrapped Phase: {img_name} vs {ref_name}')
-                    ax.axis('off')
-                    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-
-                unwrapped_psi_image = unwrapped_psi
-                fig.tight_layout()
-                show_figure_in_new_window(fig, title=f"Phase: {img_name} vs {ref_name}")
-            else:
-                if type_var.get() == "1 Beam":
-                    unwrapped_psi = combined_clean
-                unwrapped_psi_image = unwrapped_psi
-                # return here is ambiguous: maybe return dict of results if needed?
-
+            vmin, vmax = np.min(unwrapped_psi), np.max(unwrapped_psi)
+            fig, ax = plt.subplots(figsize=(8, 6))
+            im = ax.imshow(combined_clean, cmap='jet', vmin=vmin, vmax=vmax)
+            show_figure_in_new_window(fig, title=f"Phase: {img_name} vs {ref_name}")
+              
 
 
 root.title("Image Plane DHM")
