@@ -275,19 +275,34 @@ def run_phase_difference(calledFromFunction=False):
     vmin = min(np.min(unwrapped_psi), np.min(psi_inverted), np.min(combined_clean))
     vmax = max(np.max(unwrapped_psi), np.max(psi_inverted), np.max(combined_clean))
 
-    normalized = (data_to_save - vmin) / (vmax - vmin)
-    normalized = np.clip(normalized, 0, 1)  # Safety clip
+    if not calledFromFunction:
+        vmin, vmax = np.min(unwrapped_psi), np.max(unwrapped_psi)
 
-    # Apply 'jet' colormap
-    colormap = cm.get_cmap('jet')
-    colored_img = (colormap(normalized)[:, :, :3] * 255).astype(np.uint8)  # RGB, no alpha
+        fig, ax = plt.subplots(figsize=(8, 6))
 
-    # Convert to PIL Image and save
-    img_pil = Image.fromarray(colored_img)
+        if type_var.get() == "1 Beam":
+            im = ax.imshow(combined_clean, cmap='jet', vmin=vmin, vmax=vmax)
+            ax.set_title('Combined Unwrapped Phase')
+            ax.axis('off')
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            unwrapped_psi = combined_clean
+        else:
+            im = ax.imshow(unwrapped_psi, cmap='jet')
+            ax.set_title('Unwrapped Phase')
+            ax.axis('off')
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-    save_path = f"phase_{img_name}_vs_{ref_name}.png"
-    img_pil.save(save_path)
-    print(f"Saved: {save_path}")
+        unwrapped_psi_image = unwrapped_psi
+        fig.tight_layout()
+
+        show_figure_in_new_window(fig, title="Phase Visualization")
+        enable_rest()
+
+    else:
+        if type_var.get() == "1 Beam":
+            unwrapped_psi = combined_clean
+        unwrapped_psi_image = unwrapped_psi
+        return unwrapped_psi
 
 
 
