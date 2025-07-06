@@ -11,7 +11,7 @@ from matplotlib.widgets import RectangleSelector
 from skimage.draw import line
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
+import matplotlib.cm as cm
 
 #fixed problem with functionss & variables assigment / now able to use run all many times without problems
 #did some refactoring
@@ -198,8 +198,8 @@ def run_phase_difference(calledFromFunction=False):
     filter_type = filter_type_var.get()
     filter_size = int(filter_size_var.get())
 
-    for img_name, A1 in images_dict.items():
-        for ref_name, A2 in reference_dict.items():
+    for (img_name, A1), (ref_name, A2) in zip(images_dict.items(), reference_dict.items()):
+
             print(f"Processing: Image = {img_name}, Reference = {ref_name}")
             print("Image mean:", np.mean(A1))
             print("Reference mean:", np.mean(A2))
@@ -244,6 +244,7 @@ def run_phase_difference(calledFromFunction=False):
             unwrapped_psi -= np.min(unwrapped_psi)
 
             mean = np.mean(unwrapped_psi)
+
             psi_inverted = 2 * mean - unwrapped_psi
 
             clean_psi = np.copy(unwrapped_psi)
@@ -254,11 +255,25 @@ def run_phase_difference(calledFromFunction=False):
 
             combined_clean = np.maximum(clean_psi, clean_psi_inverted)
 
-            normalized = (unwrapped_psi - np.min(unwrapped_psi)) / (np.max(unwrapped_psi) - np.min(unwrapped_psi))
-            img_uint8 = (normalized * 255).astype(np.uint8)
+            vmin = min(np.min(unwrapped_psi), np.min(psi_inverted), np.min(combined_clean))
+            vmax = max(np.max(unwrapped_psi), np.max(psi_inverted), np.max(combined_clean))
 
-            img_pil = Image.fromarray(img_uint8)
-            img_pil.save(f"phase_{img_name}_vs_{ref_name}.png")
+            normalized = (combined_clean - vmin) / (vmax - vmin)
+            normalized = np.clip(normalized, 0, 1)
+
+            # Apply 'jet' colormap
+            colormap = matplotlib.colormaps.get_cmap('jet')
+            colored_img = (colormap(normalized)[:, :, :3] * 255).astype(np.uint8)  # RGB only
+
+            output_dir = "output"
+            os.makedirs(output_dir, exist_ok=True)
+            # Convert to PIL image and save
+            img_pil = Image.fromarray(colored_img)
+            save_path = os.path.join(output_dir, f"{img_name} phase {ref_name} ref.png")
+            img_pil.save(save_path)
+
+
+            print(f"Saved combined_clean image as {save_path}")
 
 
 root.title("Image Plane DHM")
