@@ -1,0 +1,34 @@
+Completed:
+
+    1- Completed several courses on FPGA development.
+
+    2- Learnt about various types of microscopy, including their advantages and limitations.
+
+    3- Practiced image acquisition using Digital Holographic Microscopy (DHM) and calibrated microscope settings and parameters.
+
+    4- Upgraded and improved parts of the existing codebase, including user interface/experience enhancements, image processing improvements, better error handling, and real-time feedback to the user.
+
+    5- Developed and trained a machine learning model to denoise images captured by the microscope.
+
+    6- Developed an additional Python program tailored for microscope dataset collection
+
+Planned:
+
+    1- Plan to take courses on Raspberry Pi development.
+
+    2- Replace the current camera unit on the microscope to improve universality and portability.
+
+    3- Integrate the image capturing system with the image processing system to create a single, compact setup.
+
+    4- Migrate the microscope control system from FPGA to Raspberry Pi.
+
+    5- Integrate the motor control and image acquisition systems into a single Raspberry Pi unit.
+
+    6- Develop an AI model to analyze blood cells for common diseases such as malaria and anemia.
+
+Extra:
+
+    1- Develop an FPGA implementation of the classification machine learning model to run it on hardware instead of software for better performance (in collaboration with students from another project).
+
+    
+
