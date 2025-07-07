@@ -198,8 +198,8 @@ def run_phase_difference(calledFromFunction=False):
     filter_type = filter_type_var.get()
     filter_size = int(filter_size_var.get())
 
-    for (img_name, A1), (ref_name, A2) in zip(images_dict.items(), reference_dict.items()):
-
+    for img_name, A1 in images_dict.items():
+        for ref_name, A2 in reference_dict.items():
             print(f"Processing: Image = {img_name}, Reference = {ref_name}")
             print("Image mean:", np.mean(A1))
             print("Reference mean:", np.mean(A2))
@@ -244,7 +244,6 @@ def run_phase_difference(calledFromFunction=False):
             unwrapped_psi -= np.min(unwrapped_psi)
 
             mean = np.mean(unwrapped_psi)
-
             psi_inverted = 2 * mean - unwrapped_psi
 
             clean_psi = np.copy(unwrapped_psi)
@@ -258,23 +257,29 @@ def run_phase_difference(calledFromFunction=False):
             vmin = min(np.min(unwrapped_psi), np.min(psi_inverted), np.min(combined_clean))
             vmax = max(np.max(unwrapped_psi), np.max(psi_inverted), np.max(combined_clean))
 
+            # Normalize combined_clean to [0, 1]
             normalized = (combined_clean - vmin) / (vmax - vmin)
             normalized = np.clip(normalized, 0, 1)
 
-            # Apply 'jet' colormap
+            # Apply jet colormap
             colormap = matplotlib.colormaps.get_cmap('jet')
             colored_img = (colormap(normalized)[:, :, :3] * 255).astype(np.uint8)  # RGB only
 
+            # Convert to PIL image
+            img_pil = Image.fromarray(colored_img)
+
+            # Save to output folder
             output_dir = "output"
             os.makedirs(output_dir, exist_ok=True)
-            # Convert to PIL image and save
-            img_pil = Image.fromarray(colored_img)
-            save_path = os.path.join(output_dir, f"{img_name} phase {ref_name} ref.png")
+            save_path = os.path.join(output_dir, f"phase_{img_name}_vs_{ref_name}.png")
             img_pil.save(save_path)
-
 
             print(f"Saved combined_clean image as {save_path}")
 
+            # Store unwrapped_psi_image if needed
+            if type_var.get() == "1 Beam":
+                unwrapped_psi = combined_clean
+            unwrapped_psi_image = unwrapped_psi
 
 root.title("Image Plane DHM")
 root.geometry("480x500")
