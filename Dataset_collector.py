@@ -256,30 +256,91 @@ def run_phase_difference(calledFromFunction=False):
 
             vmin = min(np.min(unwrapped_psi), np.min(psi_inverted), np.min(combined_clean))
             vmax = max(np.max(unwrapped_psi), np.max(psi_inverted), np.max(combined_clean))
+def run_phase_difference(calledFromFunction=False):
+    global unwrapped_psi_image
+    global wavelength_var, pixel_size_var, magnification_var, delta_ri_var
+    global dc_remove_var, filter_type_var, filter_size_var
+    global image_label_var, reference_label_var
+    global images_dict, reference_dict
+    global vmin, vmax
 
-            # Normalize combined_clean to [0, 1]
-            normalized = (combined_clean - vmin) / (vmax - vmin)
-            normalized = np.clip(normalized, 0, 1)
+    lambda_ = float(wavelength_var.get())
+    cam_pix_size = float(pixel_size_var.get())
+    magnification = float(magnification_var.get())
+    delta_RI = float(delta_ri_var.get())
+    dc_out = int(dc_remove_var.get())
+    filter_type = filter_type_var.get()
+    filter_size = int(filter_size_var.get())
 
-            # Apply jet colormap
-            colormap = matplotlib.colormaps.get_cmap('jet')
-            colored_img = (colormap(normalized)[:, :, :3] * 255).astype(np.uint8)  # RGB only
+    for img_name, A1 in images_dict.items():
+        for ref_name, A2 in reference_dict.items():
+            print(f"Processing: Image = {img_name}, Reference = {ref_name}")
+            print("Image mean:", np.mean(A1))
+            print("Reference mean:", np.mean(A2))
 
-            # Convert to PIL image
-            img_pil = Image.fromarray(colored_img)
+            Ny, Nx = A1.shape
+            A1_shiftft = FFT_calc(A1)
 
-            # Save to output folder
-            output_dir = "output"
-            os.makedirs(output_dir, exist_ok=True)
+            center_y, center_x = Ny // 2, Nx // 2
+            temp = np.abs(A1_shiftft.copy())
+            temp[center_y - dc_out:center_y + dc_out, center_x - dc_out:center_x + dc_out] = 0
+            max_y, max_x = np.unravel_index(np.argmax(temp), temp.shape)
+            mask_bool = create_mask((Ny, Nx), (max_y, max_x), filter_size, kind=filter_type)
+
+            filt_spec = A1_shiftft * mask_bool
+            cy, cx = np.array(mask_bool.shape) // 2
+            shift_y = cy - max_y
+            shift_x = cx - max_x
+            filt_spec = np.roll(np.roll(filt_spec, shift_y, axis=0), shift_x, axis=1)
+            obj_image = np.fft.ifft2(filt_spec)
+
+            A2_shiftft = FFT_calc(A2)
+            ref_filt_spec = A2_shiftft * mask_bool
+            ref_filt_spec = np.roll(np.roll(ref_filt_spec, shift_y, axis=0), shift_x, axis=1)
+            ref_image = np.fft.ifft2(ref_filt_spec)
+
+            o1 = obj_image / ref_image
+            phase1 = np.angle(o1)
+            phase1[phase1 < 0] += 2 * np.pi
+
+            obj_img = np.fft.fft2(np.fft.fftshift(filt_spec))
+            int_obj = np.abs(obj_img) ** 2
+            int_obj = (int_obj - np.min(int_obj)) / np.max(int_obj)
+
+            Fs_x = 1 / cam_pix_size
+            Fs_y = 1 / cam_pix_size
+            dFx = Fs_x / Nx
+            dFy = Fs_y / Ny
+            Fx = np.linspace(-Fs_x / 2, Fs_x / 2 - dFx, Nx)
+            Fy = np.linspace(-Fs_y / 2, Fs_y / 2 - dFy, Ny)
+
+            unwrapped_psi = Fast_Unwrap(Fx, Fy, phase1)
+            unwrapped_psi -= np.min(unwrapped_psi)
+
+            mean = np.mean(unwrapped_psi)
+            psi_inverted = 2 * mean - unwrapped_psi
+
+            clean_psi = np.copy(unwrapped_psi)
+            clean_psi[unwrapped_psi < mean] = mean
+
+            clean_psi_inverted = np.copy(psi_inverted)
+            clean_psi_inverted[psi_inverted < mean] = mean
+
+            combined_clean = np.maximum(clean_psi, clean_psi_inverted)
+
+            normalized = (combined_clean - combined_clean.min()) / (combined_clean.max() - combined_clean.min())
+            grayscale_uint8 = (normalized * 255).astype(np.uint8)
+
+            # Convert to PIL grayscale image
+            img_pil = Image.fromarray(grayscale_uint8, mode='L')
+
+            # Save to output directory
+            output_dir = "output_normal"
             save_path = os.path.join(output_dir, f"phase_{img_name}_vs_{ref_name}.png")
             img_pil.save(save_path)
 
-            print(f"Saved combined_clean image as {save_path}")
+            print(f"Saved grayscale combined_clean image at: {save_path}")
 
-            # Store unwrapped_psi_image if needed
-            if type_var.get() == "1 Beam":
-                unwrapped_psi = combined_clean
-            unwrapped_psi_image = unwrapped_psi
 
 root.title("Image Plane DHM")
 root.geometry("480x500")
