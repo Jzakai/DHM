@@ -706,6 +706,9 @@ button_panel4 = tk.LabelFrame(root, text="Other", padx=10, pady=10, font=('Arial
 button_panel4.grid(row=7, column=0, columnspan=4, pady=20)
 run_all_button = Button(button_panel4, text="Run All", state='disabled', command=run_all, width=15)
 run_all_button.grid(row=0, column=1, padx=10)
+
+root.protocol("WM_DELETE_WINDOW", root.destroy)
+
 root.mainloop()
 
 
