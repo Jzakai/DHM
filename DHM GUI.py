@@ -1,4 +1,3 @@
-from pypylon import pylon
 import os
 import numpy as np
 import matplotlib
