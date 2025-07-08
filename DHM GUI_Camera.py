@@ -611,83 +611,129 @@ from matplotlib.widgets import RectangleSelector
 def open_camera_window():
     new_win = tk.Toplevel(root)
     new_win.title("Camera View")
-    new_win.geometry("960x540")
+    new_win.geometry("960x600")
 
-    top_bar = tk.Frame(new_win, padx=10, pady=5, relief=tk.RAISED, borderwidth=1)
+    top_bar = tk.Frame(new_win, padx=10, pady=5)
     top_bar.pack(fill='x')
 
-    tk.Label(top_bar, text="Exposure:").pack(side='left')
-    entry_var = tk.StringVar()
-    entry = tk.Entry(top_bar, textvariable=entry_var, width=20)
-    entry.pack(side='left', padx=5)
+    capture_btn = tk.Button(top_bar, text="Capture", state='disabled')
+    capture_btn.pack(side='left', padx=5)
 
-    zoom_in_button = tk.Button(top_bar, text="Zoom In")
-    zoom_in_button.pack(side='left', padx=5)
+    set_reference_btn = tk.Button(top_bar, text="Set as Reference", state='disabled')
+    set_reference_btn.pack(side='left', padx=5)
 
-    zoom_out_button = tk.Button(top_bar, text="Zoom Out")
-    zoom_out_button.pack(side='left', padx=5)
+    add_image_btn = tk.Button(top_bar, text="Add as Image", state='disabled')
+    add_image_btn.pack(side='left', padx=5)
 
-    # Load image
-    original_img = Image.open("x.jpg")
-    img = original_img.resize((original_img.width, 540), Image.Resampling.LANCZOS)
-    tk_img = ImageTk.PhotoImage(img)
+    # Exposure control (live apply)
+    tk.Label(top_bar, text="Exposure (µs):").pack(side='left')
+    exposure_var = tk.StringVar(value="150")
+    exposure_entry = tk.Entry(top_bar, textvariable=exposure_var, width=10)
+    exposure_entry.pack(side='left', padx=5)
 
     canvas = tk.Canvas(new_win, width=960, height=540)
     canvas.pack()
-    image_on_canvas = canvas.create_image(0, 0, anchor='nw', image=tk_img)
 
-    zoom_mode = {'active': False}
+    from PIL import Image, ImageTk
 
-    def onselect(eclick, erelease):
-        x1, y1 = int(eclick.xdata), int(eclick.ydata)
-        x2, y2 = int(erelease.xdata), int(erelease.ydata)
-        roi_coords = (min(y1, y2), max(y1, y2), min(x1, x2), max(x1, x2))
+    try:
+        camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+        camera.Open()
+        camera.ExposureAuto.SetValue('Off')  # Disable auto exposure
+        camera.ExposureTime.SetValue(150.0)  # Default exposure
+        camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+    except Exception as e:
+        tk.messagebox.showerror("Camera Error", f"Failed to open Basler camera.\n{e}")
+        new_win.destroy()
+        return
 
-        plt.close()
+    converter = pylon.ImageFormatConverter()
+    converter.OutputPixelFormat = pylon.PixelType_Mono8
+    converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-        r1, r2, c1, c2 = roi_coords
-        cropped = original_img.crop((c1, r1, c2, r2))
+    current_img = [None]
+    tk_img = [None]
 
-        zoomed = cropped.resize((960, 540), Image.Resampling.LANCZOS)
+    def update_frame():
+        if camera.IsGrabbing():
+            grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+            if grab_result.GrabSucceeded():
+                image = converter.Convert(grab_result)
+                frame = image.GetArray()
 
-        nonlocal img, tk_img
-        img = zoomed
-        tk_img = ImageTk.PhotoImage(img)
-        canvas.itemconfig(image_on_canvas, image=tk_img)
+                img = Image.fromarray(frame)
+                img = img.resize((960, 540), Image.Resampling.LANCZOS)
+                current_img[0] = frame
+                tk_img[0] = ImageTk.PhotoImage(img)
+                canvas.create_image(0, 0, anchor='nw', image=tk_img[0])
 
-    def toggle_zoom():
-        zoom_mode['active'] = not zoom_mode['active']
-        if zoom_mode['active']:
-            zoom_in_button.config(relief='sunken')
-            fig, ax = plt.subplots()
-            ax.imshow(original_img)
-            ax.set_title("Draw ROI to Zoom In: Click-drag-release")
+                capture_btn.config(state='normal')
+            grab_result.Release()
+        if camera.IsGrabbing():
+            new_win.after(30, update_frame)
 
-            selector = RectangleSelector(
-                ax, onselect,
-                useblit=True,
-                interactive=True,
-                button=[1],
-                minspanx=5,
-                minspany=5,
-                props=dict(facecolor='none', edgecolor='red', linestyle='--', linewidth=2)
-            )
-            plt.show(block=True)
+    def capture_image():
+        capture_btn.config(state='disabled')
+        set_reference_btn.config(state='normal')
+        add_image_btn.config(state='normal')
 
-            zoom_mode['active'] = False
-            zoom_in_button.config(relief='raised')
-        else:
-            zoom_in_button.config(relief='raised')
-            reset_image()
+    def set_as_reference():
+        global reference, reference_label_var
+        reference = current_img[0]
+        reference_label_var.set("Captured Reference")
+        set_reference_btn.config(state='disabled')
+        add_image_btn.config(state='disabled')
+        enable_phase_computation()
 
-    def reset_image():
-        nonlocal img, tk_img
-        img = original_img.resize((960, 540), Image.Resampling.LANCZOS)
-        tk_img = ImageTk.PhotoImage(img)
-        canvas.itemconfig(image_on_canvas, image=tk_img)
+    def add_as_image():
+        global images_dict, image_label_var, image_dropdown
+        index = 1
+        while f"Captured_Image_{index}" in images_dict:
+            index += 1
+        key = f"Captured_Image_{index}"
+        images_dict[key] = current_img[0]
 
-    zoom_in_button.config(command=toggle_zoom)
-    zoom_out_button.config(command=reset_image)
+        menu = image_dropdown["menu"]
+        menu.delete(0, "end")
+        for item in images_dict:
+            menu.add_command(label=item, command=tk._setit(image_label_var, item))
+        image_label_var.set(key)
+
+        set_reference_btn.config(state='disabled')
+        add_image_btn.config(state='disabled')
+        enable_phase_computation()
+
+    def on_exposure_change(*args):
+        try:
+            val = float(exposure_var.get())
+            if camera.IsOpen():
+                camera.ExposureTime.SetValue(val)
+        except Exception as e:
+            print(f"Exposure update failed: {e}")
+
+    exposure_var.trace_add("write", on_exposure_change)
+
+    def on_close():
+        try:
+            if camera.IsGrabbing():
+                camera.StopGrabbing()
+            camera.Close()
+        except Exception as e:
+            print(f"Camera close failed: {e}")
+        new_win.destroy()
+
+    new_win.protocol("WM_DELETE_WINDOW", on_close)
+
+    capture_btn.config(command=capture_image)
+    set_reference_btn.config(command=set_as_reference)
+    add_image_btn.config(command=add_as_image)
+
+    update_frame()
+
+
+
+
+
 
 root.title("Image Plane DHM")
 root.geometry("480x850")
