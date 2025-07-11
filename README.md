@@ -8,7 +8,7 @@
 
 ```Bash
 cd <git_address>
-python3 -m .venv .
+python3 -m venv .venv
 ```
 or create it using vscode environemnts.
 
