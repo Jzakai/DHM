@@ -13,6 +13,11 @@ from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from pypylon import pylon
 import cv2
+from PIL import Image, ImageTk
+import tkinter as tk
+from PIL import Image, ImageTk
+import matplotlib.pyplot as plt
+from matplotlib.widgets import RectangleSelector
 
 #fixed problem with functionss & variables assigment / now able to use run all many times without problems
 #did some refactoring
@@ -128,9 +133,6 @@ def load_image(dest, dropdown_var=None, dropdown_widget=None):
         print(image_label_var.get())
     except Exception as e:
         print("Image loading failed:", e)
-
-
-
 
 
 
@@ -603,10 +605,6 @@ def run_all():
     enable_rest()
     plt.show()
 
-import tkinter as tk
-from PIL import Image, ImageTk
-import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector
 
 def open_camera_window():
     new_win = tk.Toplevel(root)
@@ -634,7 +632,21 @@ def open_camera_window():
     canvas = tk.Canvas(new_win, width=960, height=540)
     canvas.pack()
 
-    from PIL import Image, ImageTk
+    # Motor control buttons frame
+    motor_frame = tk.Frame(new_win, pady=10)
+    motor_frame.pack()
+
+    def move_motor(direction):
+        print(f"Moving motor: {direction}")
+        # TODO: Replace with motor control code
+
+    tk.Button(motor_frame, text="↑ Up", width=10, command=lambda: move_motor("up")).grid(row=0, column=1)
+    tk.Button(motor_frame, text="← Left", width=10, command=lambda: move_motor("left")).grid(row=1, column=0)
+    tk.Button(motor_frame, text="→ Right", width=10, command=lambda: move_motor("right")).grid(row=1, column=2)
+    tk.Button(motor_frame, text="↓ Down", width=10, command=lambda: move_motor("down")).grid(row=2, column=1)
+
+
+    
 
     try:
         camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
