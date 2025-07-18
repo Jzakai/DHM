@@ -1,0 +1,8 @@
+observations:
+
+setup: grating- with pinhole
+
+pinhole placement: 7.5 points away from lense
+camera placement: 12.5 points away from the lense
+
+images: 

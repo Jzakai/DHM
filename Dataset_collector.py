@@ -335,7 +335,7 @@ def run_phase_difference(calledFromFunction=False):
             img_pil = Image.fromarray(grayscale_uint8, mode='L')
 
             # Save to output directory
-            output_dir = "output_normal"
+            output_dir = "test"
             save_path = os.path.join(output_dir, f"phase_{img_name}_vs_{ref_name}.png")
             img_pil.save(save_path)
 

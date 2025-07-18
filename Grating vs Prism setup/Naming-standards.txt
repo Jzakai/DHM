@@ -1,0 +1,27 @@
+Naming hierarchy:
+
+microscope setup type
+	>> grating setup
+		>> pinhole setup
+			>> holes images
+				number-obj.img
+				number-ref.img
+			>> bloodcell images
+				number-obj.img
+				number-ref.img
+
+		>> without pinhole setup
+			>> holes images
+				number-obj.img
+				number-ref.img
+			>> bloodcell images
+				number-obj.img
+				number-ref.img
+	
+	>> prism setup
+		>> holes images
+			number-obj.img
+			number-ref.ing
+		>> bloodcell images
+			number-obj.img
+			number-ref.img
