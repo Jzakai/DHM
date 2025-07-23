@@ -623,7 +623,6 @@ def open_camera_window():
     add_image_btn = tk.Button(top_bar, text="Add as Image", state='disabled')
     add_image_btn.pack(side='left', padx=5)
 
-    # Exposure control (live apply)
     tk.Label(top_bar, text="Exposure (µs):").pack(side='left')
     exposure_var = tk.StringVar(value="150")
     exposure_entry = tk.Entry(top_bar, textvariable=exposure_var, width=10)
@@ -632,18 +631,28 @@ def open_camera_window():
     canvas = tk.Canvas(new_win, width=960, height=540)
     canvas.pack()
 
-    # Motor control buttons frame
-    motor_frame = tk.Frame(new_win, pady=10)
-    motor_frame.pack()
+    upButton = tk.Button(top_bar, text="↑ Up", width=10, command=None)
+    upButton.pack(side='left', padx=5)
+
+    leftButton = tk.Button(top_bar, text="← Left", width=10, command=lambda: move_motor("left"))
+    leftButton.pack(side='left', padx=5)
+
+    rightButton = tk.Button(top_bar, text="→ Right", width=10, command=lambda: move_motor("right"))
+    rightButton.pack(side='left', padx=5)
+
+    downButton = tk.Button(top_bar, text="↓ Down", width=10, command=lambda: move_motor("down"))
+    downButton.pack(side='left', padx=5)
 
     def move_motor(direction):
         print(f"Moving motor: {direction}")
         # TODO: Replace with motor control code
 
-    tk.Button(motor_frame, text="↑ Up", width=10, command=lambda: move_motor("up")).grid(row=0, column=1)
-    tk.Button(motor_frame, text="← Left", width=10, command=lambda: move_motor("left")).grid(row=1, column=0)
-    tk.Button(motor_frame, text="→ Right", width=10, command=lambda: move_motor("right")).grid(row=1, column=2)
-    tk.Button(motor_frame, text="↓ Down", width=10, command=lambda: move_motor("down")).grid(row=2, column=1)
+    # Create a separate frame for motor buttons
+    motor_bar = tk.Frame(new_win, padx=10, pady=5)
+    motor_bar.pack(fill='x')
+
+
+
 
 
     
