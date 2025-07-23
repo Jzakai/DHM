@@ -1,0 +1,3 @@
+[submodule "stepper_motor"]
+	path = stepper_motor
+	url = https://github.com/sultanf110/stepper_motor.git
