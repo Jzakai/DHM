@@ -1,2 +1,5 @@
 Fix the repo on ur machine ASAP or...
 Fix the problem with building FaHAD libarary (gcc not installed)
+
+First= make a libaray for the program functions and UI
+UI should be the top priority as it will send the commands to the communicator which will envoke functions from the functions libaray 
