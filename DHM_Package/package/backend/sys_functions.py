@@ -130,7 +130,7 @@ def check_spectrum(imageArray):
         temp[center_y - dc_out:center_y + dc_out, center_x - dc_out:center_x + dc_out] = 0
         max_y, max_x = np.unravel_index(np.argmax(temp), temp.shape)
 
-        mask_bool = create_mask(imageArray, (max_y, max_x), filter_size, kind=filter_type)
+        mask_bool = create_mask(imageArray, (max_y, max_x))
         spectrum_global = np.log(1 + np.abs(imageArray_shiftft))
         return imageArray_shiftft, mask_bool, max_y, max_x
 
@@ -152,7 +152,7 @@ def run_phase_difference(imageArray, reference):
     temp[center_y - dc_remove:center_y + dc_remove, center_x - dc_remove:center_x + dc_remove] = 0
     max_y, max_x = np.unravel_index(np.argmax(temp), temp.shape)
 
-    mask_bool = create_mask(imageArray, (max_y, max_x), filter_size, kind=filter_type)
+    mask_bool = create_mask(imageArray, (max_y, max_x))
     filt_spec = imageArray_shiftft * mask_bool
     cy, cx = np.array(mask_bool.shape) // 2
     shift_y = cy - max_y

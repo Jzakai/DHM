@@ -20,18 +20,58 @@ class DHMGUI:
 
         # Storage
         self.images_dict = {}
-        self.references_dict = {}
+        self.reference = None
         self.image_label_var = tk.StringVar(value="None Selected")
         self.reference_label_var = tk.StringVar(value="No Reference Selected")
+        self.unwrapped_psi_image = None
 
-        # --- Parameters panel ---
-        param_panel = tk.LabelFrame(root, text="Parameters", padx=10, pady=10, font=('Arial', 10, 'bold'))
-        param_panel.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky='nsew')
+        
+        self.param_panel = tk.LabelFrame(root, text="Parameters", padx=10, pady=10, font=('Arial', 10, 'bold'))
+        self.param_panel.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky='nsew')
 
-        Label(param_panel, text="Wavelength (μm)").grid(row=0, column=0, sticky='e')
-        self.wavelength_var = Entry(param_panel, width=10)
+        # Row 0
+        tk.Label(self.param_panel, text="Wavelength (μm)").grid(row=0, column=0, sticky='e')
+        self.wavelength_var = tk.Entry(self.param_panel, width=10)
         self.wavelength_var.insert(0, "0.650")
         self.wavelength_var.grid(row=0, column=1)
+
+        tk.Label(self.param_panel, text="Camera Pixel Size (μm)").grid(row=0, column=2, sticky='e')
+        self.pixel_size_var = tk.Entry(self.param_panel, width=10)
+        self.pixel_size_var.insert(0, "1.0")
+        self.pixel_size_var.grid(row=0, column=3)
+
+        # Row 1
+        tk.Label(self.param_panel, text="Magnification").grid(row=1, column=0, sticky='e')
+        self.magnification_var = tk.Entry(self.param_panel, width=10)
+        self.magnification_var.insert(0, "10")
+        self.magnification_var.grid(row=1, column=1)
+
+        tk.Label(self.param_panel, text="RI Difference").grid(row=1, column=2, sticky='e')
+        self.delta_ri_var = tk.Entry(self.param_panel, width=10)
+        self.delta_ri_var.insert(0, "1")
+        self.delta_ri_var.grid(row=1, column=3)
+
+        # Row 2
+        tk.Label(self.param_panel, text="Pixels not be used in scanning").grid(row=2, column=0, sticky='e')
+        self.dc_remove_var = tk.Entry(self.param_panel, width=10)
+        self.dc_remove_var.insert(0, "20")
+        self.dc_remove_var.grid(row=2, column=1)
+
+        tk.Label(self.param_panel, text="Filter Size (pixels)").grid(row=2, column=2, sticky='e')
+        self.filter_size_var = tk.Entry(self.param_panel, width=10)
+        self.filter_size_var.insert(0, "101")
+        self.filter_size_var.grid(row=2, column=3)
+
+        # Row 3
+        tk.Label(self.param_panel, text="Filter Type").grid(row=3, column=0, sticky='e')
+        self.filter_type_var = tk.StringVar(root)
+        self.filter_type_var.set("circle")
+        tk.OptionMenu(self.param_panel, self.filter_type_var, "circle", "square").grid(row=3, column=1)
+
+        tk.Label(self.param_panel, text="Number of beams").grid(row=3, column=2, sticky='e')
+        self.type_var = tk.StringVar(root)
+        self.type_var.set("1 Beam")
+        tk.OptionMenu(self.param_panel, self.type_var, "2 Beams", "1 Beam").grid(row=3, column=3)
 
         # --- Camera Panel ---
         camera_panel = tk.LabelFrame(root, text="Camera", padx=10, pady=10, font=('Arial', 10, 'bold'))
@@ -63,7 +103,7 @@ class DHMGUI:
         button_panel2 = tk.LabelFrame(root, text="ROI and Noise Reduction", padx=10, pady=10, font=('Arial', 10, 'bold'))
         button_panel2.grid(row=5, column=0, columnspan=4, pady=20)
         Button(button_panel2, text="Select ROI", command=self.select_roi, width=15).grid(row=0, column=0, padx=10)
-        Button(button_panel2, text="Noise Reduction", command=reduce_noise, width=15).grid(row=0, column=4, padx=10)
+        #Button(button_panel2, text="Noise Reduction", command=reduce_noise, width=15).grid(row=0, column=4, padx=10)
 
         # --- Thickness Panel ---
         button_panel3 = tk.LabelFrame(root, text="Thickness Distribution", padx=10, pady=10, font=('Arial', 10, 'bold'))
@@ -93,23 +133,12 @@ class DHMGUI:
         # --- Call backend function ---
         imageArray_shiftft, mask_bool, max_y, max_x = check_spectrum(imageArray)
 
-        # --- Create figure ---
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-
-        # Display log spectrum
-        spectrum_display = np.log(1 + np.abs(imageArray_shiftft))
-        axs[0].imshow(spectrum_display, cmap='gray')
-        axs[0].set_title('Spectrum (Log Scale)')
-        axs[0].plot(max_x, max_y, 'r+', markersize=12)  # mark max frequency
-        axs[0].axis('off')
-
-        # Display mask
-        axs[1].imshow(mask_bool, cmap='gray')
-        axs[1].set_title('Frequency Mask')
-        axs[1].axis('off')
-
-        plt.suptitle("Fourier Spectrum & Mask", fontsize=14)
-        plt.tight_layout()
+        fig, ax = plt.subplots()
+        ax.imshow(np.log(1 + np.abs(imageArray_shiftft)), cmap='gray')
+        ax.contour(mask_bool, colors='red', linewidths=1)
+        ax.set_title('Filter and Position')
+        ax.axis('off')
+        fig.tight_layout()
         plt.show()
 
     def display_phase_difference(self):
@@ -252,39 +281,22 @@ class DHMGUI:
                 menu.add_command(label=item, command=tk._setit(self.image_label_var, item))
             self.image_label_var.set(list(self.images_dict.keys())[0])
 
-            messagebox.showinfo("Success", f"Loaded {len(file_paths)} image(s).")
         except Exception as e:
             messagebox.showerror("Error", f"Image loading failed: {e}")
 
     def load_reference_image(self):
+        """Load one or more sample images into dictionary and update dropdown."""
         file_paths = filedialog.askopenfilenames(
-            title="Select Reference Image(s)",
-            filetypes=[
-                ("Bitmap files", "*.bmp"),
-                ("TIFF files", "*.tif"),
-                ("All files", "*.*")
-            ]
+            title="Select Image(s)",
+            filetypes=[("Bitmap files", "*.bmp"), ("TIFF files", "*.tif"), ("All files", "*.*")]
         )
-        if not file_paths:
-            print("No reference file(s) selected.")
-            return
 
-        try:
-            for file_path in file_paths:
-                img = Image.open(file_path).convert("L")
-                title = os.path.basename(file_path)
-                self.references_dict[title] = np.array(img)
+        img = Image.open(file_paths[0]).convert("L")
+        title = os.path.basename(file_paths[0])
+        img_array = np.array(img)
+        self.reference_label_var.set(title)
+        self.reference = img_array
 
-            # Update dropdown for references
-            menu = self.reference_dropdown["menu"]
-            menu.delete(0, "end")
-            for item in self.references_dict:
-                menu.add_command(label=item, command=tk._setit(self.reference_label_var, item))
-
-            self.reference_label_var.set(list(self.references_dict.keys())[0])  # Set first loaded reference as default
-            print("Reference images loaded:", list(self.references_dict.keys()))
-        except Exception as e:
-            print("Reference loading failed:", e)
 
     def select_roi(self, calledFromFunction=False):
         """Interactive ROI selection on unwrapped_psi_image."""
@@ -295,7 +307,6 @@ class DHMGUI:
         # Reset ROI state
         self.roi_coords = None
         self.roi_selected_flag = False
-        plt.close('all')
 
         def onselect(eclick, erelease):
             x1, y1 = int(eclick.xdata), int(eclick.ydata)
@@ -308,7 +319,8 @@ class DHMGUI:
         ax.imshow(self.unwrapped_psi_image, cmap='jet')
         ax.set_title("Draw ROI: Click-drag-release")
 
-        RectangleSelector(
+        # Keep a reference to RectangleSelector
+        self.rectangle_selector = RectangleSelector(
             ax, onselect,
             useblit=True,
             interactive=True,

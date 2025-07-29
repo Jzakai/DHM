@@ -3,3 +3,7 @@ from package.frontend.UI_functions import DHMGUI  # Adjust based on where your c
 
 run = DHMGUI
 run.run()
+
+#Select roi not working problelety
+#self referencing not working 
+#spectrun is not what we done
