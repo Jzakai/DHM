@@ -8,7 +8,11 @@ import tkinter as tk
 from tkinter import Label, Entry, Button, StringVar, OptionMenu, filedialog, messagebox
 from package.backend.sys_functions import (
     check_spectrum, run_phase_difference, reduce_noise,
-    compute_2d_thickness, compute_3d_thickness, compute_1d_thickness
+    compute_2d_thickness, compute_3d_thickness, compute_1d_thickness,set_pixel_size_var, set_magnification_var,set_delta_ri_var,
+        set_dc_remove_var,
+        set_filter_type_var,
+        set_filter_size_var,
+        set_wavelength_var
 )
 
 class DHMGUI:
@@ -76,7 +80,7 @@ class DHMGUI:
         # --- Camera Panel ---
         camera_panel = tk.LabelFrame(root, text="Camera", padx=10, pady=10, font=('Arial', 10, 'bold'))
         camera_panel.grid(row=2, column=0, columnspan=4, pady=10)
-        #Button(camera_panel, text="Open Camera", command=open_camera_window, width=15).grid(row=3, column=1, padx=10, pady=5)
+        Button(camera_panel, text="Open Camera", command=self.open_camera_window, width=15).grid(row=3, column=1, padx=10, pady=5)
 
         # --- Images Panel ---
         images_panel = tk.LabelFrame(root, text="Images", padx=10, pady=10, font=('Arial', 10, 'bold'))
@@ -117,6 +121,36 @@ class DHMGUI:
         button_panel4.grid(row=7, column=0, columnspan=4, pady=20)
         Button(button_panel4, text="Run All", command=self.run_all, width=15).grid(row=0, column=1, padx=10)
 
+    def open_camera_window():
+        new_win = tk.Toplevel(DHMGUI)
+        new_win.title("Camera View")
+        new_win.geometry("960x540")
+
+        top_bar = tk.Frame(new_win, padx=10, pady=5, relief=tk.RAISED, borderwidth=1)
+        top_bar.pack(fill='x')
+
+        tk.Label(top_bar, text="Exposure:").pack(side='left')
+        entry_var = tk.StringVar()
+        entry = tk.Entry(top_bar, textvariable=entry_var, width=20)
+        entry.pack(side='left', padx=5)
+
+        zoom_in_button = tk.Button(top_bar, text="Zoom In")
+        zoom_in_button.pack(side='left', padx=5)
+
+        zoom_out_button = tk.Button(top_bar, text="Zoom Out")
+        zoom_out_button.pack(side='left', padx=5)
+
+    # Load image
+    original_img = Image.open("x.jpg")
+    img = original_img.resize((original_img.width, 540), Image.Resampling.LANCZOS)
+    tk_img = ImageTk.PhotoImage(img)
+
+    canvas = tk.Canvas(new_win, width=960, height=540)
+    canvas.pack()
+    image_on_canvas = canvas.create_image(0, 0, anchor='nw', image=tk_img)
+
+    zoom_mode = {'active': False}
+
     def display_spectrum(self):
 
         # --- Get selected image from GUI ---
@@ -142,6 +176,17 @@ class DHMGUI:
         plt.show()
 
     def display_phase_difference(self):
+
+        #set parameters
+        set_pixel_size_var(self.pixel_size_var)
+        set_magnification_var(self.magnification_var)
+        set_delta_ri_var(self.delta_ri_var)
+        set_dc_remove_var(self.dc_remove_var)
+        set_filter_type_var(self.filter_type_var)
+        set_filter_size_var(self.filter_size_var)
+        set_wavelength_var(self.wavelength_var)
+
+
         # --- Get the selected object image and reference ---
         image_key = self.image_label_var.get()
         if not image_key or image_key not in self.images_dict:
@@ -160,15 +205,41 @@ class DHMGUI:
         # --- Store result for later ROI / thickness use ---
         self.unwrapped_psi_image = unwrapped_psi
 
-        # --- Display using Matplotlib ---
-        vmin, vmax = unwrapped_psi.min(), unwrapped_psi.max()
+
+        mean = np.mean(unwrapped_psi)
+
+        psi_inverted = 2 * mean - unwrapped_psi
+
+        clean_psi = np.copy(unwrapped_psi)
+        clean_psi[unwrapped_psi < mean] = mean
+
+        clean_psi_inverted = np.copy(psi_inverted)
+        clean_psi_inverted[psi_inverted < mean] = mean
+
+        combined_clean = np.maximum(clean_psi, clean_psi_inverted)
+
+        
+        vmin, vmax = np.min(unwrapped_psi), np.max(unwrapped_psi)
+
         fig, ax = plt.subplots(figsize=(8, 6))
-        im = ax.imshow(unwrapped_psi, cmap="jet", vmin=vmin, vmax=vmax)
-        ax.set_title("Unwrapped Phase Difference")
-        ax.axis("off")
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+        if self.type_var.get() == "1 Beam":
+            im = ax.imshow(combined_clean, cmap='jet', vmin=vmin, vmax=vmax)
+            ax.set_title('Combined Unwrapped Phase')
+            ax.axis('off')
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            unwrapped_psi = combined_clean
+        else:
+            im = ax.imshow(unwrapped_psi, cmap='jet')
+            ax.set_title('Unwrapped Phase')
+            ax.axis('off')
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+        unwrapped_psi_image = unwrapped_psi
         fig.tight_layout()
         plt.show()
+
+    
 
     def display_2d_thickness(self):
         """
@@ -348,8 +419,8 @@ class DHMGUI:
             fig.colorbar(im, ax=ax)
             fig.tight_layout()
             plt.show()
-        else:
-            return reduce_noise(self.roi)
+    
+            return reduce_noise(self.roi,2)
 
     def run_all(self):
         """Run full DHM pipeline and display results in a multi-panel figure."""
