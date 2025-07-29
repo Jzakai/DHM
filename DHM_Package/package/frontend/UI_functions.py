@@ -6,78 +6,76 @@ import numpy as np
 from PIL import Image
 import tkinter as tk
 from tkinter import Label, Entry, Button, StringVar, OptionMenu, filedialog, messagebox
-from dhmGUI.core import (
-    load_image, check_spectrum, run_phase_difference,
-    select_roi, reduce_noise,
-    compute_2d_thickness, compute_3d_thickness, compute_1d_thickness, run_all
+from package.backend.sys_functions import (
+    check_spectrum, run_phase_difference, reduce_noise,
+    compute_2d_thickness, compute_3d_thickness, compute_1d_thickness
 )
 
 class DHMGUI:
- def __init__(self, root):
-    self.root = root
-    root.title("Image Plane DHM")
-    root.geometry("480x850")
-    root.resizable(False, False)
+    def __init__(self, root):
+        self.root = root
+        root.title("Image Plane DHM")
+        root.geometry("480x850")
+        root.resizable(False, False)
 
-    # Storage
-    self.images_dict = {}
-    self.references_dict = {}
-    self.image_label_var = tk.StringVar(value="None Selected")
-    self.reference_label_var = tk.StringVar(value="No Reference Selected")
+        # Storage
+        self.images_dict = {}
+        self.references_dict = {}
+        self.image_label_var = tk.StringVar(value="None Selected")
+        self.reference_label_var = tk.StringVar(value="No Reference Selected")
 
-    # --- Parameters panel ---
-    param_panel = tk.LabelFrame(root, text="Parameters", padx=10, pady=10, font=('Arial', 10, 'bold'))
-    param_panel.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky='nsew')
+        # --- Parameters panel ---
+        param_panel = tk.LabelFrame(root, text="Parameters", padx=10, pady=10, font=('Arial', 10, 'bold'))
+        param_panel.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky='nsew')
 
-    Label(param_panel, text="Wavelength (μm)").grid(row=0, column=0, sticky='e')
-    self.wavelength_var = Entry(param_panel, width=10)
-    self.wavelength_var.insert(0, "0.650")
-    self.wavelength_var.grid(row=0, column=1)
+        Label(param_panel, text="Wavelength (μm)").grid(row=0, column=0, sticky='e')
+        self.wavelength_var = Entry(param_panel, width=10)
+        self.wavelength_var.insert(0, "0.650")
+        self.wavelength_var.grid(row=0, column=1)
 
-    # --- Camera Panel ---
-    camera_panel = tk.LabelFrame(root, text="Camera", padx=10, pady=10, font=('Arial', 10, 'bold'))
-    camera_panel.grid(row=2, column=0, columnspan=4, pady=10)
-    Button(camera_panel, text="Open Camera", command=open_camera_window, width=15).grid(row=3, column=1, padx=10, pady=5)
+        # --- Camera Panel ---
+        camera_panel = tk.LabelFrame(root, text="Camera", padx=10, pady=10, font=('Arial', 10, 'bold'))
+        camera_panel.grid(row=2, column=0, columnspan=4, pady=10)
+        #Button(camera_panel, text="Open Camera", command=open_camera_window, width=15).grid(row=3, column=1, padx=10, pady=5)
 
-    # --- Images Panel ---
-    images_panel = tk.LabelFrame(root, text="Images", padx=10, pady=10, font=('Arial', 10, 'bold'))
-    images_panel.grid(row=3, column=0, columnspan=4, pady=10)
+        # --- Images Panel ---
+        images_panel = tk.LabelFrame(root, text="Images", padx=10, pady=10, font=('Arial', 10, 'bold'))
+        images_panel.grid(row=3, column=0, columnspan=4, pady=10)
 
-    Button(images_panel, text="Load Image", command=self.load_images_to_dict, width=15).grid(row=3, column=1, padx=10, pady=5)
-    Button(images_panel, text="Load Reference", command=self.load_reference_image, width=15).grid(row=3, column=2, padx=10, pady=5)
+        Button(images_panel, text="Load Image", command=self.load_images_to_dict, width=15).grid(row=3, column=1, padx=10, pady=5)
+        Button(images_panel, text="Load Reference", command=self.load_reference_image, width=15).grid(row=3, column=2, padx=10, pady=5)
 
-    # Dropdown for images
-    self.image_dropdown = OptionMenu(images_panel, self.image_label_var, "None Available")
-    self.image_dropdown.grid(row=4, column=1, pady=(0, 2))
+        # Dropdown for images
+        self.image_dropdown = OptionMenu(images_panel, self.image_label_var, "None Available")
+        self.image_dropdown.grid(row=4, column=1, pady=(0, 2))
 
-    Label(images_panel, textvariable=self.reference_label_var).grid(row=4, column=2, pady=(0, 5))
+        Label(images_panel, textvariable=self.reference_label_var).grid(row=4, column=2, pady=(0, 5))
 
-    # --- Phase Computation Panel ---
-    button_panel = tk.LabelFrame(root, text="Phase computation", padx=10, pady=10, font=('Arial', 10, 'bold'))
-    button_panel.grid(row=4, column=0, columnspan=4, pady=20)
-    self.check_spectrum_button = Button(button_panel, text="Check Spectrum", command=self.display_spectrum, width=15)
-    self.check_spectrum_button.grid(row=0, column=0, padx=10, pady=5)
-    self.run_phase_button = Button(button_panel, text="Phase Difference", command=self.display_phase_difference, width=15)
-    self.run_phase_button.grid(row=0, column=1, padx=10, pady=5)
+        # --- Phase Computation Panel ---
+        button_panel = tk.LabelFrame(root, text="Phase computation", padx=10, pady=10, font=('Arial', 10, 'bold'))
+        button_panel.grid(row=4, column=0, columnspan=4, pady=20)
+        self.check_spectrum_button = Button(button_panel, text="Check Spectrum", command=self.display_spectrum, width=15)
+        self.check_spectrum_button.grid(row=0, column=0, padx=10, pady=5)
+        self.run_phase_button = Button(button_panel, text="Phase Difference", command=self.display_phase_difference, width=15)
+        self.run_phase_button.grid(row=0, column=1, padx=10, pady=5)
 
-    # --- ROI and Noise Panel ---
-    button_panel2 = tk.LabelFrame(root, text="ROI and Noise Reduction", padx=10, pady=10, font=('Arial', 10, 'bold'))
-    button_panel2.grid(row=5, column=0, columnspan=4, pady=20)
-    Button(button_panel2, text="Select ROI", command=select_roi, width=15).grid(row=0, column=0, padx=10)
-    Button(button_panel2, text="Noise Reduction", command=reduce_noise, width=15).grid(row=0, column=4, padx=10)
+        # --- ROI and Noise Panel ---
+        button_panel2 = tk.LabelFrame(root, text="ROI and Noise Reduction", padx=10, pady=10, font=('Arial', 10, 'bold'))
+        button_panel2.grid(row=5, column=0, columnspan=4, pady=20)
+        Button(button_panel2, text="Select ROI", command=self.select_roi, width=15).grid(row=0, column=0, padx=10)
+        Button(button_panel2, text="Noise Reduction", command=reduce_noise, width=15).grid(row=0, column=4, padx=10)
 
-    # --- Thickness Panel ---
-    button_panel3 = tk.LabelFrame(root, text="Thickness Distribution", padx=10, pady=10, font=('Arial', 10, 'bold'))
-    button_panel3.grid(row=6, column=0, columnspan=4, pady=20)
-    Button(button_panel3, text="2D profile", command=self.display_2d_thickness, width=15).grid(row=0, column=0, padx=10)
-    Button(button_panel3, text="3D profile", command=self.display_3d_thickness, width=15).grid(row=0, column=1, padx=10)
-    Button(button_panel3, text="1D profile", command=self.display_1d_thickness, width=15).grid(row=0, column=3, padx=10)
+        # --- Thickness Panel ---
+        button_panel3 = tk.LabelFrame(root, text="Thickness Distribution", padx=10, pady=10, font=('Arial', 10, 'bold'))
+        button_panel3.grid(row=6, column=0, columnspan=4, pady=20)
+        Button(button_panel3, text="2D profile", command=self.display_2d_thickness, width=15).grid(row=0, column=0, padx=10)
+        Button(button_panel3, text="3D profile", command=self.display_3d_thickness, width=15).grid(row=0, column=1, padx=10)
+        Button(button_panel3, text="1D profile", command=self.display_1d_thickness, width=15).grid(row=0, column=3, padx=10)
 
-    # --- Other Panel ---
-    button_panel4 = tk.LabelFrame(root, text="Other", padx=10, pady=10, font=('Arial', 10, 'bold'))
-    button_panel4.grid(row=7, column=0, columnspan=4, pady=20)
-    Button(button_panel4, text="Run All", command=run_all, width=15).grid(row=0, column=1, padx=10)
-
+        # --- Other Panel ---
+        button_panel4 = tk.LabelFrame(root, text="Other", padx=10, pady=10, font=('Arial', 10, 'bold'))
+        button_panel4.grid(row=7, column=0, columnspan=4, pady=20)
+        Button(button_panel4, text="Run All", command=self.run_all, width=15).grid(row=0, column=1, padx=10)
 
     def display_spectrum(self):
 
@@ -259,23 +257,34 @@ class DHMGUI:
             messagebox.showerror("Error", f"Image loading failed: {e}")
 
     def load_reference_image(self):
-        """Load a single reference image."""
-        file_path = filedialog.askopenfilename(
-            title="Select Reference Image",
-            filetypes=[("Bitmap files", "*.bmp"), ("TIFF files", "*.tif"), ("All files", "*.*")]
+        file_paths = filedialog.askopenfilenames(
+            title="Select Reference Image(s)",
+            filetypes=[
+                ("Bitmap files", "*.bmp"),
+                ("TIFF files", "*.tif"),
+                ("All files", "*.*")
+            ]
         )
-        if not file_path:
+        if not file_paths:
+            print("No reference file(s) selected.")
             return
 
         try:
-            img = Image.open(file_path).convert("L")
-            self.reference = np.array(img)
-            self.reference_label_var.set(os.path.basename(file_path))
-            messagebox.showinfo("Success", "Reference image loaded.")
+            for file_path in file_paths:
+                img = Image.open(file_path).convert("L")
+                title = os.path.basename(file_path)
+                self.references_dict[title] = np.array(img)
+
+            # Update dropdown for references
+            menu = self.reference_dropdown["menu"]
+            menu.delete(0, "end")
+            for item in self.references_dict:
+                menu.add_command(label=item, command=tk._setit(self.reference_label_var, item))
+
+            self.reference_label_var.set(list(self.references_dict.keys())[0])  # Set first loaded reference as default
+            print("Reference images loaded:", list(self.references_dict.keys()))
         except Exception as e:
-            messagebox.showerror("Error", f"Reference loading failed: {e}")
-
-
+            print("Reference loading failed:", e)
 
     def select_roi(self, calledFromFunction=False):
         """Interactive ROI selection on unwrapped_psi_image."""
@@ -407,7 +416,7 @@ class DHMGUI:
         plt.show()
 
 
-    def run(self):
+    def run():
         root = tk.Tk()
         app = DHMGUI(root)
         root.mainloop()
