@@ -1,20 +1,15 @@
 # main_gui.py
+import json
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector
 import os
 import numpy as np
-from PIL import Image
+from PIL import Image,ImageTk
 import tkinter as tk
 from tkinter import Label, Entry, Button, StringVar, OptionMenu, filedialog, messagebox
 from package.backend.sys_functions import (
     check_spectrum, run_phase_difference, reduce_noise,
-    compute_2d_thickness, compute_3d_thickness, compute_1d_thickness,set_pixel_size_var, set_magnification_var,set_delta_ri_var,
-        set_dc_remove_var,
-        set_filter_type_var,
-        set_filter_size_var,
-        set_wavelength_var
-)
-
+    compute_2d_thickness, compute_3d_thickness, compute_1d_thickness, get_parameters)
 class DHMGUI:
     def __init__(self, root):
         self.root = root
@@ -76,6 +71,11 @@ class DHMGUI:
         self.type_var = tk.StringVar(root)
         self.type_var.set("1 Beam")
         tk.OptionMenu(self.param_panel, self.type_var, "2 Beams", "1 Beam").grid(row=3, column=3)
+
+        tk.Label(self.param_panel, text="Threshold strengh").grid(row=3, column=4, sticky='e')
+        self.noise_th = Entry(self.param_panel, width=10)
+        self.noise_th.insert(0, "1")
+        self.noise_th.grid(row=3, column=4)
 
         # --- Camera Panel ---
         camera_panel = tk.LabelFrame(root, text="Camera", padx=10, pady=10, font=('Arial', 10, 'bold'))
@@ -140,16 +140,68 @@ class DHMGUI:
         zoom_out_button = tk.Button(top_bar, text="Zoom Out")
         zoom_out_button.pack(side='left', padx=5)
 
-    # Load image
-    original_img = Image.open("x.jpg")
-    img = original_img.resize((original_img.width, 540), Image.Resampling.LANCZOS)
-    tk_img = ImageTk.PhotoImage(img)
+        # Load image
+        original_img = Image.open("x.jpg")
+        img = original_img.resize((original_img.width, 540), Image.Resampling.LANCZOS)
+        tk_img = ImageTk.PhotoImage(img)
 
-    canvas = tk.Canvas(new_win, width=960, height=540)
-    canvas.pack()
-    image_on_canvas = canvas.create_image(0, 0, anchor='nw', image=tk_img)
+        canvas = tk.Canvas(new_win, width=960, height=540)
+        canvas.pack()
+        image_on_canvas = canvas.create_image(0, 0, anchor='nw', image=tk_img)
 
-    zoom_mode = {'active': False}
+        zoom_mode = {'active': False}
+
+        def onselect(eclick, erelease):
+            x1, y1 = int(eclick.xdata), int(eclick.ydata)
+            x2, y2 = int(erelease.xdata), int(erelease.ydata)
+            roi_coords = (min(y1, y2), max(y1, y2), min(x1, x2), max(x1, x2))
+
+            plt.close()
+
+            r1, r2, c1, c2 = roi_coords
+            cropped = original_img.crop((c1, r1, c2, r2))
+
+            zoomed = cropped.resize((960, 540), Image.Resampling.LANCZOS)
+
+            nonlocal img, tk_img
+            img = zoomed
+            tk_img = ImageTk.PhotoImage(img)
+            canvas.itemconfig(image_on_canvas, image=tk_img)
+
+        def toggle_zoom():
+            zoom_mode['active'] = not zoom_mode['active']
+            if zoom_mode['active']:
+                zoom_in_button.config(relief='sunken')
+                fig, ax = plt.subplots()
+                ax.imshow(original_img)
+                ax.set_title("Draw ROI to Zoom In: Click-drag-release")
+
+                selector = RectangleSelector(
+                    ax, onselect,
+                    useblit=True,
+                    interactive=True,
+                    button=[1],
+                    minspanx=5,
+                    minspany=5,
+                    props=dict(facecolor='none', edgecolor='red', linestyle='--', linewidth=2)
+                )
+                plt.show(block=True)
+
+                zoom_mode['active'] = False
+                zoom_in_button.config(relief='raised')
+            else:
+                zoom_in_button.config(relief='raised')
+                reset_image()
+
+        def reset_image():
+            nonlocal img, tk_img
+            img = original_img.resize((960, 540), Image.Resampling.LANCZOS)
+            tk_img = ImageTk.PhotoImage(img)
+            canvas.itemconfig(image_on_canvas, image=tk_img)
+
+        zoom_in_button.config(command=toggle_zoom)
+        zoom_out_button.config(command=reset_image)
+    
 
     def display_spectrum(self):
 
@@ -177,15 +229,23 @@ class DHMGUI:
 
     def display_phase_difference(self):
 
-        #set parameters
-        set_pixel_size_var(self.pixel_size_var)
-        set_magnification_var(self.magnification_var)
-        set_delta_ri_var(self.delta_ri_var)
-        set_dc_remove_var(self.dc_remove_var)
-        set_filter_type_var(self.filter_type_var)
-        set_filter_size_var(self.filter_size_var)
-        set_wavelength_var(self.wavelength_var)
+        # --- Collect parameters into a dictionary ---
+        params = {
+            "wavelength": float(self.wavelength_var.get()),
+            "pixel_size": float(self.pixel_size_var.get()),
+            "magnification": float(self.magnification_var.get()),
+            "delta_ri": float(self.delta_ri_var.get()),
+            "dc_remove": int(self.dc_remove_var.get()),
+            "filter_type": self.filter_type_var.get(),
+            "filter_size": int(self.filter_size_var.get()),
+            "beam_type": self.type_var.get(),
+            "threshold_strength": float(self.noise_th.get())
+        }
+    # --- Convert to JSON ---
+        params_json = json.dumps(params)
+        print("Parameters JSON:", params_json)  # debug print
 
+        get_parameters(params_json) #send params to backend
 
         # --- Get the selected object image and reference ---
         image_key = self.image_label_var.get()
