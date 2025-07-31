@@ -57,3 +57,4 @@ async def thickness_3d(image: UploadFile = Form(...)):
         "Y": Y.tolist(),
         "Z": Z.tolist()
     })
+    

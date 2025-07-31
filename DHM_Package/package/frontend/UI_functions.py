@@ -7,6 +7,9 @@ import numpy as np
 from PIL import Image,ImageTk
 import tkinter as tk
 from tkinter import Label, Entry, Button, StringVar, OptionMenu, filedialog, messagebox
+import paramiko
+from pathlib import Path
+
 from package.backend.sys_functions import (
     check_spectrum, run_phase_difference, reduce_noise,
     compute_2d_thickness, compute_3d_thickness, compute_1d_thickness)
@@ -16,6 +19,14 @@ class DHMGUI:
         root.title("Image Plane DHM")
         root.geometry("480x850")
         root.resizable(False, False)
+
+        self.ip = "192.168.1.121"
+        self.username = "dhm"
+        self.password = "123"
+        self.image_name = "x.jpg"
+        self.images_path = r"./images/input"
+        self.src = f"./images/input/{self.image_name}" # full path to your local file
+        self.dest = r"/home/dhm/Desktop/x.bmp"  # remote target full path (adjust if Windows!)
 
         # Storage
         self.images_dict = {}
@@ -120,6 +131,29 @@ class DHMGUI:
         button_panel4 = tk.LabelFrame(root, text="Other", padx=10, pady=10, font=('Arial', 10, 'bold'))
         button_panel4.grid(row=7, column=0, columnspan=4, pady=20)
         Button(button_panel4, text="Run All", command=self.run_all, width=15).grid(row=0, column=1, padx=10)
+
+
+
+
+    def send_images_to_backend(self, ip, username, password, image_title, dest):
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        try:
+            print(f"Connecting to {ip} as {username}...")
+            client.connect(ip, username=username, password=password)
+
+            with client.open_sftp() as sftp:
+                print(f"Uploading {self.images_path} to {dest}...")
+                sftp.put(self.images_path, dest)
+                print("Upload complete!")
+
+        except Exception as e:
+            print("Error during upload:", e)
+
+        finally:
+            client.close()
+
 
     def open_camera_window():
         new_win = tk.Toplevel(root)
@@ -478,7 +512,8 @@ class DHMGUI:
                 img = Image.open(file_path).convert("L")
                 title = os.path.basename(file_path)
                 self.images_dict[title] = np.array(img)
-
+                img.save(f"{self.images_path}/{title}")
+                self.send_images_to_backend(self.ip, self.username, self.password, title, "home/dhm/Desktop")
             # Update dropdown menu
             menu = self.image_dropdown["menu"]
             menu.delete(0, "end")
