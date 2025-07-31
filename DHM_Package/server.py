@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, Form
 from fastapi.responses import JSONResponse
 import numpy as np
-from backend.sys_functions import run_phase_difference, compute_2d_thickness, compute_3d_thickness
+from package.backend.sys_functions import run_phase_difference, compute_2d_thickness, compute_3d_thickness
 
 import cv2
 import io
@@ -14,29 +14,33 @@ def read_imagefile(file) -> np.ndarray:
     image = Image.open(io.BytesIO(file))
     return np.array(image.convert("L"))
 
+from fastapi import FastAPI
+from pydantic import BaseModel
+from sys_functions import run_phase_difference_backend
+
+app = FastAPI()
+
+class PhaseParams(BaseModel):
+    wavelength: float
+    pixel_size: float
+    magnification: float
+    delta_ri: float
+    dc_remove: int
+    filter_type: str
+    filter_size: int
+    beam_type: str
+    threshold_strength: float
+
 @app.post("/run_phase_difference")
-async def phase_difference(
-    params: str = Form(...),
-    object_image: UploadFile = Form(...),
-    reference_image: UploadFile = Form(...)
-):
-    try:
-        # --- Parse parameters ---
-        params_dict = json.loads(params)
+async def run_phase_difference(params: PhaseParams):
+    # Assuming images have already been sent via SCP and saved at fixed paths
+    image_path = "server_storage/image.bmp"
+    reference_path = "server_storage/reference.bmp"
 
-        # --- Read Images ---
-        obj_img = read_imagefile(await object_image.read())
-        ref_img = read_imagefile(await reference_image.read())
-
-        # --- Run backend function ---
-        result = run_phase_difference(obj_img, ref_img)
-
-        # Convert NumPy to list
-        result_list = result.tolist()
-        return JSONResponse(content={"status": "success", "phase_map": result_list})
-
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)})
+    phase_result = run_phase_difference_backend(image_path, reference_path, params.dict())
+    
+    # Convert numpy array to list (for JSON transport)
+    return {"phase_map": phase_result.tolist()}
 
 @app.post("/compute_2d_thickness")
 async def thickness_2d(image: UploadFile = Form(...)):

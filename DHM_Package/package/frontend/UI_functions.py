@@ -298,11 +298,21 @@ class DHMGUI:
             "beam_type": self.type_var.get(),
             "threshold_strength": float(self.noise_th.get())
         }
-    # --- Convert to JSON ---
-        params_json = json.dumps(params)
-        print("Parameters JSON:", params_json)  # debug print
-
-        
+    
+        #pass parameters as post to server
+        # --- Convert to JSON and send POST to server ---
+        try:
+            response = requests.post(
+                "http://127.0.0.1:8000/run_phase_difference_params",
+                json=params
+            )
+            if response.status_code == 200:
+                result = response.json()
+                print("Server Response:", result)  # or handle returned metadata
+            else:
+                print("Server Error:", response.status_code, response.text)
+        except Exception as e:
+            print("Error communicating with server:", e)
 
         # --- Get the selected object image and reference ---
         image_key = self.image_label_var.get()
@@ -318,6 +328,11 @@ class DHMGUI:
 
         # --- Call backend computation ---
         unwrapped_psi = run_phase_difference(imageArray, reference)
+    #send params, image, ref to server
+    # reqeust unwraped phase image
+
+
+    #get the unwrapped phase image
 
         # --- Store result for later ROI / thickness use ---
         self.unwrapped_psi_image = unwrapped_psi
@@ -445,6 +460,8 @@ class DHMGUI:
         ax.set_title("1D Thickness Profile")
         ax.grid(True)
         plt.show()
+
+    #helper function to save image in server
     
     def load_images_to_dict(self):
         """Load one or more sample images into dictionary and update dropdown."""

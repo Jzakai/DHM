@@ -135,25 +135,63 @@ def check_spectrum(imageArray):
         return imageArray_shiftft, mask_bool, max_y, max_x
 
 
-def run_phase_difference(imageArray, reference):
-    magnification = float(get_magnification_var())
-    delta_ri = float(get_delta_ri_var())
-    dc_remove = int(get_dc_remove_var())
-    filter_type = get_filter_type_var()
-    filter_size = int(get_filter_size_var())
-    cam_pix_filter_size = float(get_pixel_size_var())
-    lambda_ = float(get_wavelength_var())
+def run_phase_difference(
+    imageArray,
+    reference,
+    wavelength,
+    pixel_size,
+    magnification,
+    delta_ri,
+    dc_remove,
+    filter_type,
+    filter_size,
+    beam_type,
+    threshold_strength
+):
+    """
+    Compute unwrapped phase difference between object image and reference.
+
+    Parameters:
+    -----------
+    imageArray : np.ndarray
+        Object image array.
+    reference : np.ndarray
+        Reference image array.
+    wavelength : float
+        Wavelength in microns.
+    pixel_size : float
+        Camera pixel size in microns.
+    magnification : float
+        Microscope magnification.
+    delta_ri : float
+        Refractive index difference.
+    dc_remove : int
+        Pixels removed from center in frequency domain.
+    filter_type : str
+        Filter shape ('circle' or 'square').
+    filter_size : int
+        Size of filter mask.
+    beam_type : str
+        Type of DHM setup ('1 Beam' or '2 Beams').
+    threshold_strength : float
+        Threshold parameter for noise cleaning.
+
+    Returns:
+    --------
+    np.ndarray
+        Unwrapped phase map.
+    """
 
     Ny, Nx = imageArray.shape
-    imageArray_shiftft = FFT_calc(imageArray)
+    A1_shiftft = FFT_calc(imageArray)
 
     center_y, center_x = Ny // 2, Nx // 2
-    temp = np.abs(imageArray_shiftft.copy())
+    temp = np.abs(A1_shiftft.copy())
     temp[center_y - dc_remove:center_y + dc_remove, center_x - dc_remove:center_x + dc_remove] = 0
     max_y, max_x = np.unravel_index(np.argmax(temp), temp.shape)
+    mask_bool = create_mask((Ny, Nx), (max_y, max_x), filter_size, kind=filter_type)
 
-    mask_bool = create_mask(imageArray, (max_y, max_x))
-    filt_spec = imageArray_shiftft * mask_bool
+    filt_spec = A1_shiftft * mask_bool
     cy, cx = np.array(mask_bool.shape) // 2
     shift_y = cy - max_y
     shift_x = cx - max_x
@@ -169,12 +207,8 @@ def run_phase_difference(imageArray, reference):
     phase1 = np.angle(o1)
     phase1[phase1 < 0] += 2 * np.pi
 
-    obj_img = np.fft.fft2(np.fft.fftshift(filt_spec))
-    int_obj = np.abs(obj_img) ** 2
-    int_obj = (int_obj - np.min(int_obj)) / np.max(int_obj)
-
-    Fs_x = 1 / cam_pix_filter_size
-    Fs_y = 1 / cam_pix_filter_size
+    Fs_x = 1 / pixel_size
+    Fs_y = 1 / pixel_size
     dFx = Fs_x / Nx
     dFy = Fs_y / Ny
     Fx = np.linspace(-Fs_x / 2, Fs_x / 2 - dFx, Nx)
@@ -182,22 +216,21 @@ def run_phase_difference(imageArray, reference):
 
     unwrapped_psi = Fast_Unwrap(Fx, Fy, phase1)
     unwrapped_psi -= np.min(unwrapped_psi)
+
+    # Optional cleaning based on threshold_strength
     mean = np.mean(unwrapped_psi)
     psi_inverted = 2 * mean - unwrapped_psi
-
     clean_psi = np.copy(unwrapped_psi)
     clean_psi[unwrapped_psi < mean] = mean
-
     clean_psi_inverted = np.copy(psi_inverted)
     clean_psi_inverted[psi_inverted < mean] = mean
-
     combined_clean = np.maximum(clean_psi, clean_psi_inverted)
 
-    if filter_type == "1 Beam":
-        unwrapped_psi = combined_clean
-
-    return unwrapped_psi
-
+    if beam_type == "1 Beam":
+        return combined_clean
+    else:
+        return unwrapped_psi
+    
 
 def reduce_noise(imageArray, threshold):
     pixel_size = float(get_pixel_size_var())
