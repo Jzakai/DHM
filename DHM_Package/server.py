@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, Form
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import numpy as np
 from package.backend.sys_functions import run_phase_difference, compute_2d_thickness, compute_3d_thickness
 
@@ -14,9 +15,6 @@ def read_imagefile(file) -> np.ndarray:
     image = Image.open(io.BytesIO(file))
     return np.array(image.convert("L"))
 
-from fastapi import FastAPI
-from pydantic import BaseModel
-from sys_functions import run_phase_difference_backend
 
 app = FastAPI()
 
