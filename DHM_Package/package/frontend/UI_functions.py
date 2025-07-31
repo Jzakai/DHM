@@ -1,5 +1,6 @@
 # main_gui.py
 import json
+from fastapi import requests
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector
 import os
@@ -135,7 +136,7 @@ class DHMGUI:
 
 
 
-    def send_images_to_backend(self, ip, username, password, image_title, dest):
+    def send_images_to_backend(self, ip, username, password, image_title,src, dest):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -144,8 +145,8 @@ class DHMGUI:
             client.connect(ip, username=username, password=password)
 
             with client.open_sftp() as sftp:
-                print(f"Uploading {self.images_path} to {dest}...")
-                sftp.put(self.images_path, dest)
+                print(f"Uploading {src} to {dest}...")
+                sftp.put(src, dest)
                 print("Upload complete!")
 
         except Exception as e:
@@ -361,7 +362,19 @@ class DHMGUI:
             return
 
         # --- Call backend computation ---
-        unwrapped_psi = run_phase_difference(imageArray, reference)
+        unwrapped_psi = run_phase_difference(
+        imageArray,
+        reference,
+        params["wavelength"],
+        params["pixel_size"],
+        params["magnification"],
+        params["delta_ri"],
+        params["dc_remove"],
+        params["filter_type"],
+        params["filter_size"],
+        params["beam_type"],
+        params["threshold_strength"]
+        )
     #send params, image, ref to server
     # reqeust unwraped phase image
 
@@ -513,7 +526,8 @@ class DHMGUI:
                 title = os.path.basename(file_path)
                 self.images_dict[title] = np.array(img)
                 img.save(f"{self.images_path}/{title}")
-                self.send_images_to_backend(self.ip, self.username, self.password, title, "home/dhm/Desktop")
+                src = os.path.abspath(f"{self.images_path}/{title}")
+                self.send_images_to_backend(self.ip, self.username, self.password, title, src,f"/home/dhm/Desktop/{title}")
             # Update dropdown menu
             menu = self.image_dropdown["menu"]
             menu.delete(0, "end")
