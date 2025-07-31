@@ -35,7 +35,7 @@ async def run_phase_difference(params: PhaseParams):
     image_path = "server_storage/image.bmp"
     reference_path = "server_storage/reference.bmp"
 
-    phase_result = run_phase_difference_backend(image_path, reference_path, params.dict())
+    phase_result = run_phase_difference(image_path, reference_path, params.dict())
     
     # Convert numpy array to list (for JSON transport)
     return {"phase_map": phase_result.tolist()}
