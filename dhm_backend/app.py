@@ -7,8 +7,8 @@ from PIL import Image
 from tkinter import messagebox
 
 # Load images as grayscale arrays
-img = Image.open("C:\\Users\\mmaah\\OneDrive\\سطح المكتب\\dhm_backend\\D.bmp").convert("L")
-ref = Image.open("C:\\Users\\mmaah\\OneDrive\\سطح المكتب\\dhm_backend\\REF.bmp").convert("L")
+img = Image.open("path_to_image")
+ref = Image.open("path_to_ref")
 
 json_dummy = {
   "pixel_size_var": 2,
