@@ -84,7 +84,7 @@ def FFT_calc(A):
 
 
 def create_mask(imageArray, max_coords):
-    Ny, Nx = imageArray
+    Ny, Nx = imageArray.shape
     max_y, max_x = max_coords
     center = (max_y, max_x)
     kind = get_filter_type_var()
@@ -189,7 +189,7 @@ def run_phase_difference(
     temp = np.abs(A1_shiftft.copy())
     temp[center_y - dc_remove:center_y + dc_remove, center_x - dc_remove:center_x + dc_remove] = 0
     max_y, max_x = np.unravel_index(np.argmax(temp), temp.shape)
-    mask_bool = create_mask((Ny, Nx), (max_y, max_x))
+    mask_bool = create_mask((imageArray), (max_y, max_x))
 
     filt_spec = A1_shiftft * mask_bool
     cy, cx = np.array(mask_bool.shape) // 2
