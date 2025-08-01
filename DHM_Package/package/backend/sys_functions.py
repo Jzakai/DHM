@@ -24,6 +24,8 @@ _dc_remove_var = 20
 _filter_type_var = 'circle'
 _filter_size_var = 100
 _wavelength_var = 0.65  # Added wavelength variable
+_beam_type_var = '1 beam'
+_threshold_var = 1.0
 
 # Setters
 def set_pixel_size_var(value):
@@ -55,6 +57,14 @@ def set_wavelength_var(value):
     global _wavelength_var
     _wavelength_var = value
 
+def set_beam_type_var(value):
+    global _beam_type_var
+    _beam_type_var = value
+
+def set_threshold_var(value):
+    global _threshold_var
+    _threshold_var = value
+
 # Getters
 def get_pixel_size_var():
     return _pixel_size_var
@@ -76,6 +86,12 @@ def get_filter_size_var():
 
 def get_wavelength_var():
     return _wavelength_var
+
+def get_beam_type_var():
+    return _beam_type_var
+
+def get_threshold_var():
+    return _threshold_var
 
 
 def FFT_calc(A):
@@ -139,49 +155,32 @@ def check_spectrum(imageArray):
 #make run phase difference use local vars of params,
 #make a helper function to split the json string, converty types, and save to variables
 
-def run_phase_difference(
-    imageArray,
-    reference,
-    wavelength,
-    pixel_size,
-    magnification,
-    delta_ri,
-    dc_remove,
-    filter_type,
-    filter_size,
-    beam_type,
-    threshold_strength
-):
+import json
+
+def get_params(self,params_json):
+    """
+    Parse parameters JSON string and return unpacked values.
+    """
+    try:
+        params = json.loads(params_json)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON format: {e}")
+
+    # Extract and convert values
+    set_wavelength_var(float(params.get("wavelength", 0.65)))
+    set_pixel_size_var(float(params.get("pixel_size", 1.0)))
+    set_magnification_var(float(params.get("magnification", 10)))
+    set_delta_ri_var(float(params.get("delta_ri", 1)))
+    set_dc_remove_var (int(params.get("dc_remove", 20)))
+    set_filter_type_var (params.get("filter_type", "circle"))
+    set_filter_size_var(int(params.get("filter_size", 101)))
+    set_beam_type_var (params.get("beam_type", "1 Beam"))
+    set_threshold_var (float(params.get("threshold_strength", 1.0)))
+
+def run_phase_difference(self,imageArray,reference):
     """
     Compute unwrapped phase difference between object image and reference.
-
-    Parameters:
-    -----------
-    imageArray : np.ndarray
-        Object image array.
-    reference : np.ndarray
-        Reference image array.
-    wavelength : float
-        Wavelength in microns.
-    pixel_size : float
-        Camera pixel size in microns.
-    magnification : float
-        Microscope magnification.
-    delta_ri : float
-        Refractive index difference.
-    dc_remove : int
-        Pixels removed from center in frequency domain.
-    filter_type : str
-        Filter shape ('circle' or 'square').
-    filter_size : int
-        Size of filter mask.
-    beam_type : str
-        Type of DHM setup ('1 Beam' or '2 Beams').
-    threshold_strength : float
-        Threshold parameter for noise cleaning.
-
     Returns:
-    --------
     np.ndarray
         Unwrapped phase map.
     """
@@ -191,7 +190,7 @@ def run_phase_difference(
 
     center_y, center_x = Ny // 2, Nx // 2
     temp = np.abs(A1_shiftft.copy())
-    temp[center_y - dc_remove:center_y + dc_remove, center_x - dc_remove:center_x + dc_remove] = 0
+    temp[center_y - get_dc_remove_var():center_y + get_dc_remove_var(), center_x - get_dc_remove_var():center_x + get_dc_remove_var()] = 0
     max_y, max_x = np.unravel_index(np.argmax(temp), temp.shape)
     mask_bool = create_mask((imageArray), (max_y, max_x))
 
@@ -211,8 +210,8 @@ def run_phase_difference(
     phase1 = np.angle(o1)
     phase1[phase1 < 0] += 2 * np.pi
 
-    Fs_x = 1 / pixel_size
-    Fs_y = 1 / pixel_size
+    Fs_x = 1 / get_pixel_size_var()
+    Fs_y = 1 / get_pixel_size_var()
     dFx = Fs_x / Nx
     dFy = Fs_y / Ny
     Fx = np.linspace(-Fs_x / 2, Fs_x / 2 - dFx, Nx)
@@ -230,18 +229,19 @@ def run_phase_difference(
     clean_psi_inverted[psi_inverted < mean] = mean
     combined_clean = np.maximum(clean_psi, clean_psi_inverted)
 
-    if beam_type == "1 Beam":
+    if get_beam_type_var() == "1 Beam":
         return combined_clean
     else:
         return unwrapped_psi
     
 
-def reduce_noise(imageArray, threshold):
+#removed threshold param from this function
+def reduce_noise(imageArray):
     pixel_size = float(get_pixel_size_var())
     magnification = float(get_magnification_var())
 
     noise_red_phase = imageArray.copy()
-    noise_red_phase[noise_red_phase < threshold * np.mean(noise_red_phase)] = threshold * np.mean(noise_red_phase)
+    noise_red_phase[noise_red_phase < get_threshold_var() * np.mean(noise_red_phase)] = get_threshold_var() * np.mean(noise_red_phase)
 
     rows2, cols2 = noise_red_phase.shape
     delta_x = np.arange(1, cols2 + 1) * pixel_size / magnification
