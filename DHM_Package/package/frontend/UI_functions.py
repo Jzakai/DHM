@@ -371,6 +371,7 @@ class DHMGUI:
     def display_phase_difference(self):
 
         self.set_params()
+        
         # --- Get the selected object image and reference ---
         image_key = self.image_label_var.get()
         if not image_key or image_key not in self.images_dict:
