@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import numpy as np
-from package.backend.sys_functions import run_phase_difference, compute_2d_thickness, compute_3d_thickness
+from package.backend.sys_functions import get_params,run_phase_difference, compute_2d_thickness, compute_3d_thickness
 
 import cv2
 import io
@@ -28,6 +28,10 @@ class PhaseParams(BaseModel):
     filter_size: int
     beam_type: str
     threshold_strength: float
+
+@app.post("/set_params")
+async def set_params(params: PhaseParams):
+    get_params(params.dict())
 
 @app.post("/run_phase_difference")
 async def run_phase_difference(params: PhaseParams):

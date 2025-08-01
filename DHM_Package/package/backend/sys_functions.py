@@ -157,7 +157,7 @@ def check_spectrum(imageArray):
 
 import json
 
-def get_params(self,params_json):
+def get_params(params_json):
     """
     Parse parameters JSON string and return unpacked values.
     """

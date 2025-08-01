@@ -329,6 +329,7 @@ class DHMGUI:
             return
 
         # --- Call backend function ---
+        #send request to get spectrum info from backend
         imageArray_shiftft, mask_bool, max_y, max_x = check_spectrum(imageArray)
 
         fig, ax = plt.subplots()
@@ -339,8 +340,7 @@ class DHMGUI:
         fig.tight_layout()
         plt.show()
 
-    def display_phase_difference(self):
-
+    def set_params(self):
         # --- Collect parameters into a dictionary ---
         params = {
             "wavelength": float(self.wavelength_var.get()),
@@ -354,14 +354,10 @@ class DHMGUI:
             "threshold_strength": float(self.noise_th.get())
         }
 
-        resp = requests.post(f"http://{self.ip}:8000/{"run_phase_difference"}", json.dumps(params))
-        print(resp.status_code, resp.text)
-    
-        #pass parameters as post to server
         # --- Convert to JSON and send POST to server ---
         try:
             response = requests.post(
-                "http://127.0.0.1:8000/run_phase_difference_params",
+                "http://127.0.0.1:8000/set_params",
                 json=params
             )
             if response.status_code == 200:
@@ -372,6 +368,9 @@ class DHMGUI:
         except Exception as e:
             print("Error communicating with server:", e)
 
+    def display_phase_difference(self):
+
+        self.set_params()
         # --- Get the selected object image and reference ---
         image_key = self.image_label_var.get()
         if not image_key or image_key not in self.images_dict:
@@ -631,7 +630,7 @@ class DHMGUI:
             fig.tight_layout()
             plt.show()
     
-            return reduce_noise(self.roi,2)
+            return reduce_noise(self.roi)
 
     def run_all(self):
         """Run full DHM pipeline and display results in a multi-panel figure."""
