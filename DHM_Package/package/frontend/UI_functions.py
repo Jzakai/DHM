@@ -248,7 +248,7 @@ class DHMGUI:
             reference_label_var.set("Captured Reference")
             set_reference_btn.config(state='disabled')
             add_image_btn.config(state='disabled')
-            enable_phase_computation()
+            self.enable_phase_computation()
 
         def add_as_image():
             global images_dict, image_label_var, image_dropdown
@@ -266,7 +266,7 @@ class DHMGUI:
 
             set_reference_btn.config(state='disabled')
             add_image_btn.config(state='disabled')
-            enable_phase_computation()
+            self.enable_phase_computation()
 
         def on_exposure_change(*args):
             try:
@@ -295,7 +295,19 @@ class DHMGUI:
 
         update_frame()
 
+    #function used to ensure order of operations by user / enabling program features only after images are loaded
+    def enable_phase_computation():
+        global check_spectrum_button
+        global run_phase_button
+        global run_all_button
 
+
+        if (len(images_dict.keys()) > 0) and reference is not None:
+
+            check_spectrum_button.config(state='normal')
+            run_phase_button.config(state='normal')
+            run_all_button.config(state='normal')
+            
     def display_spectrum(self):
 
         # --- Get selected image from GUI ---
