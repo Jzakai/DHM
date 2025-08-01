@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import Label, Entry, Button, StringVar, OptionMenu, filedialog, messagebox
 import paramiko
 from pathlib import Path
+from pypylon import pylon
 
 from package.backend.sys_functions import (
     check_spectrum, run_phase_difference, reduce_noise,
@@ -156,8 +157,8 @@ class DHMGUI:
             client.close()
 
 
-    def open_camera_window():
-        new_win = tk.Toplevel(root)
+    def open_camera_window(self):
+        new_win = tk.Toplevel(self.root)
         new_win.title("Camera View")
         new_win.geometry("960x600")
 
@@ -547,6 +548,11 @@ class DHMGUI:
 
         img = Image.open(file_paths[0]).convert("L")
         title = os.path.basename(file_paths[0])
+
+        img.save(f"{self.images_path}/{title}")
+        src = os.path.abspath(f"{self.images_path}/{title}")
+        self.send_images_to_backend(self.ip, self.username, self.password, title, src,f"/home/dhm/Desktop/{title}")
+        
         img_array = np.array(img)
         self.reference_label_var.set(title)
         self.reference = img_array
