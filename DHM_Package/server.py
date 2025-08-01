@@ -39,7 +39,7 @@ async def run_phase_difference(params: PhaseParams):
     
     # Convert numpy array to list (for JSON transport)
     return {"phase_map": phase_result.tolist()}
-
+    
 @app.post("/compute_2d_thickness")
 async def thickness_2d(image: UploadFile = Form(...)):
     img = read_imagefile(await image.read())

@@ -135,6 +135,10 @@ def check_spectrum(imageArray):
         return imageArray_shiftft, mask_bool, max_y, max_x
 
 
+#make it take 3 params, image & red & params(json file)
+#make run phase difference use local vars of params,
+#make a helper function to split the json string, converty types, and save to variables
+
 def run_phase_difference(
     imageArray,
     reference,

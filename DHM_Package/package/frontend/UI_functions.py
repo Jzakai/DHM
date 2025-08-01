@@ -11,6 +11,12 @@ from tkinter import Label, Entry, Button, StringVar, OptionMenu, filedialog, mes
 import paramiko
 from pathlib import Path
 from pypylon import pylon
+import requests
+import json
+
+
+
+
 
 from package.backend.sys_functions import (
     check_spectrum, run_phase_difference, reduce_noise,
@@ -23,6 +29,7 @@ class DHMGUI:
         root.resizable(False, False)
 
         self.ip = "192.168.1.121"
+        self.port = "8000"
         self.username = "dhm"
         self.password = "123"
         self.image_name = "x.jpg"
@@ -334,6 +341,9 @@ class DHMGUI:
             "beam_type": self.type_var.get(),
             "threshold_strength": float(self.noise_th.get())
         }
+
+        resp = requests.post(f"http://{self.ip}:8000/{"run_phase_difference"}", json.dumps(params))
+        print(resp.status_code, resp.text)
     
         #pass parameters as post to server
         # --- Convert to JSON and send POST to server ---
