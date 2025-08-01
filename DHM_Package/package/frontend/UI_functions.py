@@ -353,13 +353,14 @@ class DHMGUI:
             "beam_type": self.type_var.get(),
             "threshold_strength": float(self.noise_th.get())
         }
-
+        print(type(params))
         # --- Convert to JSON and send POST to server ---
         try:
             response = requests.post(
-                "http://127.0.0.1:8000/set_params",
+                f"http://{self.ip}:{self.port}/set_params",
                 json=params
             )
+
             if response.status_code == 200:
                 result = response.json()
                 print("Server Response:", result)  # or handle returned metadata
@@ -371,7 +372,7 @@ class DHMGUI:
     def display_phase_difference(self):
 
         self.set_params()
-        
+
         # --- Get the selected object image and reference ---
         image_key = self.image_label_var.get()
         if not image_key or image_key not in self.images_dict:
@@ -387,17 +388,7 @@ class DHMGUI:
         # --- Call backend computation ---
         unwrapped_psi = run_phase_difference(
         imageArray,
-        reference,
-        params["wavelength"],
-        params["pixel_size"],
-        params["magnification"],
-        params["delta_ri"],
-        params["dc_remove"],
-        params["filter_type"],
-        params["filter_size"],
-        params["beam_type"],
-        params["threshold_strength"]
-        )
+        reference)
     #send params, image, ref to server
     # reqeust unwraped phase image
 

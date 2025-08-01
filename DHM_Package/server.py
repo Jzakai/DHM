@@ -31,7 +31,17 @@ class PhaseParams(BaseModel):
 
 @app.post("/set_params")
 async def set_params(params: PhaseParams):
-    get_params(params.dict())
+    try:
+        params_dict = params.model_dump()
+        print("Received params:", params_dict)  # Debug log
+        get_params(params_dict)
+        return {"status": "ok", "received": params_dict}
+    except Exception as e:
+        import traceback
+        print("Error in set_params:", str(e))
+        traceback.print_exc()
+        return {"status": "error", "message": str(e)}
+
 
 @app.post("/run_phase_difference")
 async def run_phase_difference(params: PhaseParams):

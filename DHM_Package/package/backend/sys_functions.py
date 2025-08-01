@@ -157,15 +157,7 @@ def check_spectrum(imageArray):
 
 import json
 
-def get_params(params_json):
-    """
-    Parse parameters JSON string and return unpacked values.
-    """
-    try:
-        params = json.loads(params_json)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON format: {e}")
-
+def get_params(params:dict):
     # Extract and convert values
     set_wavelength_var(float(params.get("wavelength", 0.65)))
     set_pixel_size_var(float(params.get("pixel_size", 1.0)))
@@ -177,7 +169,7 @@ def get_params(params_json):
     set_beam_type_var (params.get("beam_type", "1 Beam"))
     set_threshold_var (float(params.get("threshold_strength", 1.0)))
 
-def run_phase_difference(self,imageArray,reference):
+def run_phase_difference(imageArray,reference):
     """
     Compute unwrapped phase difference between object image and reference.
     Returns:
