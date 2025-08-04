@@ -79,3 +79,33 @@ center.addEventListener("click", () => {
   highlight(null);
   console.log("Home pressed");
 });
+
+document.getElementById("phaseDiff").addEventListener("click", sendParams);
+
+async function sendParams() {
+    const params = {
+        wavelength: parseFloat(document.getElementById("wavelength").value),
+        pixel_size: parseFloat(document.getElementById("pixelSize").value),
+        magnification: parseFloat(document.getElementById("magnification").value),
+        delta_ri: parseFloat(document.getElementById("ri").value),
+        dc_remove: parseInt(document.getElementById("skipPixels").value),
+        filter_type: document.getElementById("filterType").value,
+        filter_size: parseInt(document.getElementById("filterSize").value),
+        beam_type: document.getElementById("beams").value,
+        threshold_strength: 1.0  // Or read from UI if needed
+    };
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/set_params", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(params)
+        });
+
+        const data = await response.json();
+        console.log("Server Response:", data);
+        alert("Parameters sent successfully!");
+    } catch (error) {
+        console.error("Error sending params:", error);
+    }
+}
