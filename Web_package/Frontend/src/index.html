@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Microscope GUI Web</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <div class="container">
+    <!-- Left panel -->
+    <div class="left">
+      <!-- Microscope Parameters -->
+      <div class="section" id="params">
+        <h2>Microscope Parameters</h2>
+        <div class="row">
+          <div class="field">
+            <label for="wavelength">Wavelength (µm)</label>
+            <input id="wavelength" type="number" value="0.650" step="0.001" />
+          </div>
+          <div class="field">
+            <label for="magnification">Magnification</label>
+            <input id="magnification" type="number" value="10" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="pixelSize">Camera Pixel Size (µm)</label>
+            <input id="pixelSize" type="number" value="1.0" step="0.1" />
+          </div>
+          <div class="field">
+            <label for="ri">RI Difference</label>
+            <input id="ri" type="number" value="1" step="0.1" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="filterType">Filter Type</label>
+            <select id="filterType">
+              <option>circle</option>
+              <option>square</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filterSize">Filter Size (pixels)</label>
+            <input id="filterSize" type="number" value="101" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="beams">Number of beams</label>
+            <select id="beams">
+              <option>1 Beam</option>
+              <option>2 Beams</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="skipPixels">Pixels not used in scanning</label>
+            <input id="skipPixels" type="number" value="20" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="section" id="images">
+        <h2>Images</h2>
+        <div class="row">
+          <div class="half">
+            <button id="loadImage">Load Image</button>
+            
+            <select name="images-list" id="image-status">
+                <option value="" disabled selected hidden>None Aviliable</option>
+            </select>
+          </div>
+          <div class="half">
+            <button id="loadRef" class="secondary">Load Reference</button>
+            <select name="refs-list" id="ref-status">No Reference Selected
+                <option value="" disabled selected hidden>None Aviliable</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase computation -->
+      <div class="section" id="phase">
+        <h2>Phase computation</h2>
+        <div class="btn-group">
+          <button id="checkSpectrum" class="sm">Check Spectrum</button>
+          <button id="phaseDiff" class="sm">Phase Difference</button>
+        </div>
+      </div>
+
+      <!-- Region of Interest -->
+      <div class="section" id="roi">
+        <h2>Region of Interest</h2>
+        <button id="selectROI">Select ROI</button>
+      </div>
+
+      <!-- Thickness Distributions -->
+      <div class="section" id="thickness">
+        <h2>Thickness Distributions</h2>
+        <div class="btn-group">
+          <button class="sm" id="2dbtn">2D profile</button>
+          <button class="sm" id="3dbtn">3D profile</button>
+          <button class="sm" id="1dbtn">1D profile</button>
+        </div>
+      </div>
+
+      <!-- Other -->
+      <div class="section" id="other">
+        <h2>Other</h2>
+        <button id="runAll">Run All</button>
+      </div>
+    </div>
+
+    <!-- Right panel: Camera + directional pad -->
+    <div class="placeholder">
+      <div class="camera-box">
+        <div class="camera-header">Camera</div>
+        <video id="video" autoplay playsinline></video>
+        <div class="controls">
+          <button id="openCam">Open Camera</button>
+          <button id="stopCam" class="secondary">Stop Camera</button>
+          <button id="saveImg" class="secondary">Stop Image</button>
+        </div>
+        <div class="small-text">Camera feed from local webcam (falls back to placeholder if denied).</div>
+
+        <!-- Directional pad -->
+        <div class="directional-container">
+          <div class="dial">
+            <!-- Quadrants -->
+            <div class="quad up" data-dir="+Y">
+              <div class="label">+Y</div>
+            </div>
+            <div class="quad right" data-dir="+X">
+              <div class="label">+X</div>
+            </div>
+            <div class="quad down" data-dir="-Y">
+              <div class="label">-Y</div>
+            </div>
+            <div class="quad left" data-dir="-X">
+              <div class="label">-X</div>
+            </div>
+            <!-- Center home -->
+            <div class="center" data-dir="home" title="Home">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z" />
+              </svg>
+            </div>
+          </div>
+          <div class="pad-status" id="pad-status">Ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/imagesSaver.js"></script>
+
+</body>
+</html>

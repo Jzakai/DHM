@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const paramsForm = document.getElementById("params-form");
+    const paramsForm = document.getElementById("phaseDiff");
 
     paramsForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             // --- Send parameters to FastAPI ---
-            const response = await fetch("http://127.0.0.1:8000/set_params", {
+            const response = await fetch("http://192.168.1.121:8000/set_params", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -58,3 +58,4 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
