@@ -1,8 +1,0 @@
-7/11/2025
-
-Issue:
-Camera not recognized when running the python code on raspian
-
-fixes:
-Installed drivers locally not in the virtual environment
-Enabled the permissions/ rules to access the basler camera
