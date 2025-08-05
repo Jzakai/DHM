@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 import numpy as np
 from PIL import Image
 import io
-from Web_package.backend.sys_functions import get_params, run_phase_difference
+from sys_functions import get_params, run_phase_difference
 
 app = FastAPI()
 
@@ -62,3 +62,7 @@ async def run_phase_difference_endpoint(
     # Run computation
     phase_result = run_phase_difference(image_np, reference_np)
     return {"phase_map": phase_result.tolist()}
+
+
+from fastapi.staticfiles import StaticFiles
+app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")

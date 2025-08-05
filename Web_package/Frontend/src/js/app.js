@@ -20,12 +20,12 @@ document.getElementById("stopCam").addEventListener("click", () => {
 });
 
 // Placeholder wiring for other buttons:
-document.getElementById("loadImage").addEventListener("click", () => {
-  document.getElementById("image-status").textContent = "Image loaded (placeholder)";
+document.getElementById("imageFile").addEventListener("change", () => {
+  console.log("Object image selected");
 });
 
-document.getElementById("loadRef").addEventListener("click", () => {
-  document.getElementById("ref-status").textContent = "Reference loaded (placeholder)";
+document.getElementById("refFile").addEventListener("change", () => {
+  console.log("Reference image selected");
 });
 
 document.getElementById("checkSpectrum").addEventListener("click", () => {
