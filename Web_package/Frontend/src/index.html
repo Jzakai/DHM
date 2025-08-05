@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <title>Microscope GUI Web</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
+
 <body>
 
   <div class="container">
@@ -62,18 +64,18 @@
         </div>
       </div>
 
-  <div class="section" id="images">
-    <h2>Images</h2>
-    <div class="row">
-      <label>Object Image:</label>
-      <input type="file" id="imageFile" accept="image/*"><br>
-      <label>Reference Image:</label>
-      <input type="file" id="refFile" accept="image/*">
-    </div>
-  </div>
+      <div class="section" id="images">
+        <h2>Images</h2>
+        <div class="row">
+          <label>Object Image:</label>
+          <input type="file" id="imageFile" accept="image/*"><br>
+          <label>Reference Image:</label>
+          <input type="file" id="refFile" accept="image/*">
+        </div>
+      </div>
 
 
-      
+
       <!-- Phase computation -->
       <div class="section" id="phase">
         <h2>Phase computation</h2>
@@ -144,6 +146,24 @@
           </div>
           <div class="pad-status" id="pad-status">Ready</div>
         </div>
+
+
+        
+
+        <div class="camera-output" id="cameraOutput">
+          <h4>Captured Output</h4>
+          <div class="output-images" id="outputImages">
+            <div class="output-box"><span>Spectrum</span></div>
+            <div class="output-box"><span>Phase Difference</span></div>
+            <div class="output-box"><span>Region of Interest</span></div>
+            <div class="output-box"><span>2D</span></div>
+            <div class="output-box"><span>3D</span></div>
+            <div class="output-box"><span>1D</span></div>
+          </div>
+        </div>
+
+
+
       </div>
     </div>
   </div>
@@ -152,4 +172,5 @@
   <script src="js/imagesSaver.js"></script>
 
 </body>
+
 </html>
