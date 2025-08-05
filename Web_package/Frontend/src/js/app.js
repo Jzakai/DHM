@@ -32,9 +32,11 @@ document.getElementById("checkSpectrum").addEventListener("click", () => {
   alert("Check Spectrum clicked");
 });
 
-document.getElementById("phaseDiff").addEventListener("click", (e) => {
-    e.preventDefault();  // stops the form from sending GET
-    sendParams();
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("phaseDiff").addEventListener("click", (e) => {
+        e.preventDefault();
+        sendParams();
+    });
 });
 
 document.getElementById("selectROI").addEventListener("click", () => {

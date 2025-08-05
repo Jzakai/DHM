@@ -18,9 +18,6 @@ import os
 app = FastAPI()
 
 
-# Calculate absolute path to frontend folder
-frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
-app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
 # Enable CORS (for frontend fetch calls)
 app.add_middleware(
@@ -89,7 +86,9 @@ async def run_phase_difference_endpoint(
         "max": float(phase_result.max())
     }
 
-##debug
-    
+
+# Calculate absolute path to frontend folder
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
+app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
 
