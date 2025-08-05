@@ -65,4 +65,9 @@ async def run_phase_difference_endpoint(
 
 
 from fastapi.staticfiles import StaticFiles
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
+import os
+
+# Calculate absolute path to frontend folder
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
+
+app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
