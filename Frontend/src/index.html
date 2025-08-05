@@ -11,6 +11,48 @@
   <div class="container">
     <!-- Left panel -->
     <div class="left">
+
+      <!-- Server Communication -->
+<div class="section" id="server">
+  <h2>Server Communication</h2>
+
+  <div class="row">
+    <div class="field">
+      <label for="serverIp">Server IP</label>
+      <input id="serverIp" type="text" placeholder="192.168.1.100"
+             pattern="^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)(\\.|$)){4}$"
+             title="IPv4 address, e.g. 192.168.0.1" />
+    </div>
+    <div class="field">
+      <label for="serverPort">Port</label>
+      <input id="serverPort" type="number" min="1" max="65535" value="22" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="serverUser">Username</label>
+      <input id="serverUser" type="text" placeholder="username" />
+    </div>
+    <div class="field password-field">
+      <label for="serverPass">Password</label>
+      <div class="password-wrapper" style="display:flex; align-items:center; gap:4px;">
+        <input id="serverPass" type="password" placeholder="••••••••" style="flex:1;" />
+        <button type="button" id="togglePass" aria-label="Show password" style="padding:4px;">👁️</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="btn-group">
+      <button id="connectServer" class="sm">Connect</button>
+      <button id="disconnectServer" class="sm secondary" disabled>Disconnect</button>
+    </div>
+  </div>
+
+  <div class="small-text" id="serverStatus">Not connected</div>
+</div>
+
       <!-- Microscope Parameters -->
       <div class="section" id="params">
         <h2>Microscope Parameters</h2>

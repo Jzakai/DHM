@@ -116,3 +116,13 @@ async function sendParams() {
         alert("Error: " + error.message);
     }
 }
+
+
+document.getElementById('mainGallery').addEventListener('click', () => {
+  const details = document.getElementById('galleryDetails');
+  if (details.style.display === 'flex') {
+    details.style.display = 'none';
+  } else {
+    details.style.display = 'flex';
+  }
+});
