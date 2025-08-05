@@ -63,10 +63,11 @@ async def run_phase_difference_endpoint(
 
     # Run computation
     phase_result = run_phase_difference(image_np, reference_np)
+    print(type(phase_result))
     return {"phase_map": phase_result.tolist()}
 
 ##debug
-    print(type(phase_result))
+    
 
 
 from fastapi.staticfiles import StaticFiles
