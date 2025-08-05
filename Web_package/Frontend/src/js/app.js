@@ -110,9 +110,14 @@ async function sendParams() {
 
         const data = await response.json();
 
-        // Display phase difference image
-        const imgElement = document.getElementById("phaseImage");
-        imgElement.src = "data:image/png;base64," + data.phase_image;
+        // Inject the phase difference image into #phaseOutput
+        const phaseOutputBox = document.getElementById("phaseOutput");
+        phaseOutputBox.innerHTML = `
+            <span>Phase Difference</span>
+            <img src="data:image/png;base64,${data.phase_image}" 
+                 alt="Phase Difference" 
+                 style="max-width:100%; display:block; margin-top:8px; border:1px solid #ccc;">
+        `;
 
         // Optional: log details
         console.log("Phase shape:", data.shape);
@@ -124,6 +129,7 @@ async function sendParams() {
         alert("Error: " + error.message);
     }
 }
+
 
 
 
