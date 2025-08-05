@@ -137,7 +137,7 @@ async function sendParams() {
 
 
 document.getElementById('mainGallery').addEventListener('click', () => {
-  const details = document.getElementById('galleryDetails');
+  const details = document.getElementById('outputImages');
   if (details.style.display === 'flex') {
     details.style.display = 'none';
   } else {
