@@ -157,6 +157,7 @@ def check_spectrum(imageArray):
 
 import json
 
+##can be deleted
 def get_params(params:dict):
     # Extract and convert values
     set_wavelength_var(float(params.get("wavelength", 0.65)))
