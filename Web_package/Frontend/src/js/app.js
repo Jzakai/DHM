@@ -81,29 +81,38 @@ center.addEventListener("click", () => {
 
 
 async function sendParams() {
-    const params = {
-        wavelength: parseFloat(document.getElementById("wavelength").value),
-        pixel_size: parseFloat(document.getElementById("pixelSize").value),
-        magnification: parseFloat(document.getElementById("magnification").value),
-        delta_ri: parseFloat(document.getElementById("ri").value),
-        dc_remove: parseInt(document.getElementById("skipPixels").value),
-        filter_type: document.getElementById("filterType").value,
-        filter_size: parseInt(document.getElementById("filterSize").value),
-        beam_type: document.getElementById("beams").value,
-        threshold_strength: 1.0  // Or read from UI if needed
-    };
+    const formData = new FormData();
+    formData.append("wavelength", document.getElementById("wavelength").value);
+    formData.append("pixel_size", document.getElementById("pixelSize").value);
+    formData.append("magnification", document.getElementById("magnification").value);
+    formData.append("delta_ri", document.getElementById("ri").value);
+    formData.append("dc_remove", document.getElementById("skipPixels").value);
+    formData.append("filter_type", document.getElementById("filterType").value);
+    formData.append("filter_size", document.getElementById("filterSize").value);
+    formData.append("beam_type", document.getElementById("beams").value);
+    formData.append("threshold_strength", "1.0");
+
+    const imageFile = document.getElementById("imageFile").files[0];
+    const refFile = document.getElementById("refFile").files[0];
+    if (!imageFile || !refFile) {
+        alert("Please select both image and reference files.");
+        return;
+    }
+    formData.append("image", imageFile);
+    formData.append("reference", refFile);
 
     try {
-        const response = await fetch("http://192.168.1.121:8000/set_params", {
+        const response = await fetch("http://192.168.1.121:8000/run_phase_difference", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(params)
+            body: formData
         });
+        if (!response.ok) throw new Error("Server error " + response.status);
 
         const data = await response.json();
-        console.log("Server Response:", data);
-        alert("Parameters sent successfully!");
+        console.log("Phase Map Data:", data.phase_map);
+        alert("Phase difference computed successfully!");
     } catch (error) {
-        console.error("Error sending params:", error);
+        console.error("Error:", error);
+        alert("Error: " + error.message);
     }
 }

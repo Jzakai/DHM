@@ -62,26 +62,18 @@
         </div>
       </div>
 
-      <!-- Images -->
-      <div class="section" id="images">
-        <h2>Images</h2>
-        <div class="row">
-          <div class="half">
-            <button id="loadImage">Load Image</button>
-            
-            <select name="images-list" id="image-status">
-                <option value="" disabled selected hidden>None Aviliable</option>
-            </select>
-          </div>
-          <div class="half">
-            <button id="loadRef" class="secondary">Load Reference</button>
-            <select name="refs-list" id="ref-status">No Reference Selected
-                <option value="" disabled selected hidden>None Aviliable</option>
-            </select>
-          </div>
-        </div>
-      </div>
+  <div class="section" id="images">
+    <h2>Images</h2>
+    <div class="row">
+      <label>Object Image:</label>
+      <input type="file" id="imageFile" accept="image/*"><br>
+      <label>Reference Image:</label>
+      <input type="file" id="refFile" accept="image/*">
+    </div>
+  </div>
 
+
+      
       <!-- Phase computation -->
       <div class="section" id="phase">
         <h2>Phase computation</h2>
