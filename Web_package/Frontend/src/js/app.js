@@ -109,10 +109,20 @@ async function sendParams() {
         if (!response.ok) throw new Error("Server error " + response.status);
 
         const data = await response.json();
-        console.log("Phase Map Data:", data.phase_map);
-        alert("Phase difference computed successfully!");
+
+        // Display phase difference image
+        const imgElement = document.getElementById("phaseImage");
+        imgElement.src = "data:image/png;base64," + data.phase_image;
+
+        // Optional: log details
+        console.log("Phase shape:", data.shape);
+        console.log("Phase range:", data.min, "to", data.max);
+
+        alert("Phase difference computed and displayed!");
     } catch (error) {
         console.error("Error:", error);
         alert("Error: " + error.message);
     }
 }
+
+

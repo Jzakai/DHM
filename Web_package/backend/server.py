@@ -11,8 +11,16 @@ import numpy as np
 from PIL import Image
 import io
 from sys_functions import get_params, run_phase_difference
+from fastapi.staticfiles import StaticFiles
+import os
+
 
 app = FastAPI()
+
+
+# Calculate absolute path to frontend folder
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
+app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
 # Enable CORS (for frontend fetch calls)
 app.add_middleware(
@@ -26,6 +34,9 @@ app.add_middleware(
 def read_imagefile(file) -> np.ndarray:
     image = Image.open(io.BytesIO(file))
     return np.array(image.convert("L"))
+
+import cv2
+import base64
 
 @app.post("/run_phase_difference")
 async def run_phase_difference_endpoint(
@@ -41,11 +52,11 @@ async def run_phase_difference_endpoint(
     image: UploadFile = File(...),
     reference: UploadFile = File(...)
 ):
-    # Parse images to NumPy
+    # Convert uploaded images to numpy arrays
     image_np = read_imagefile(await image.read())
     reference_np = read_imagefile(await reference.read())
 
-    # Set parameters
+    # Set parameters globally
     params_dict = {
         "wavelength": wavelength,
         "pixel_size": pixel_size,
@@ -59,21 +70,26 @@ async def run_phase_difference_endpoint(
     }
     get_params(params_dict)
 
-    print(params_dict)
-
-    # Run computation
+    # Run computation (numeric phase result)
     phase_result = run_phase_difference(image_np, reference_np)
-    print(type(phase_result))
-    return {"phase_map": phase_result.tolist()}
+
+    # Normalize and apply colormap
+    norm_phase = cv2.normalize(phase_result, None, 0, 255, cv2.NORM_MINMAX)
+    norm_phase = norm_phase.astype(np.uint8)
+    colored_phase = cv2.applyColorMap(norm_phase, cv2.COLORMAP_JET)
+
+    # Encode image as Base64
+    _, buffer = cv2.imencode(".png", colored_phase)
+    phase_base64 = base64.b64encode(buffer).decode("utf-8")
+
+    return {
+        "phase_image": phase_base64,
+        "shape": phase_result.shape,
+        "min": float(phase_result.min()),
+        "max": float(phase_result.max())
+    }
 
 ##debug
     
 
 
-from fastapi.staticfiles import StaticFiles
-import os
-
-# Calculate absolute path to frontend folder
-frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
-
-app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
