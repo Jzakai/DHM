@@ -210,7 +210,7 @@ async function fetch3DPlot() {
 async function fetch1DPlot() {
     psi = image.psi
     selectPoints(psi)
-    point1 = p1;
+    point1 = point1;
     point2 = p2;
 
 
@@ -315,7 +315,7 @@ function selectPoints(psi) {
             ctx.strokeStyle = 'blue';
             ctx.lineWidth = 2;
             ctx.stroke();
-
+            
             window.opener.receivePoints(points[0], points[1]);
             setTimeout(() => window.close(), 1000);
           }
