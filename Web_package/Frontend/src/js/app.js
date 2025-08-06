@@ -2,6 +2,14 @@ let stream = null;
 const video = document.getElementById("video");
 const padStatus = document.getElementById("pad-status");
 
+let selectingROI = false;
+let startX, startY, endX, endY;
+
+const roiCanvas = document.getElementById("roiCanvas");
+const ctx = roiCanvas.getContext("2d");
+const phaseImage = document.getElementById("phaseImage");
+
+
 document.getElementById("openCam").addEventListener("click", async () => {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
@@ -39,7 +47,11 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-document.getElementById("selectRoiBtn").addEventListener("click", startROISelection());
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("selectRoiBtn").addEventListener("click", startROISelection);
+    document.getElementById("3dbtn").addEventListener("click", fetch3DPlot);
+});
+
 
 document.getElementById("runAll").addEventListener("click", () => {
   alert("Run All sequence started");
@@ -50,12 +62,6 @@ document.getElementById("2dbtn").addEventListener("click", () => {
 });
 
 
-document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("3dbtn").addEventListener("click", (e) => {
-        e.preventDefault();
-        fetch3DPlot();
-    });
-});
 
 document.getElementById("1dbtn").addEventListener("click", () => {
   alert("1dbtn clicked");
@@ -152,12 +158,6 @@ async function fetch3DPlot() {
     }
 }
 
-let selectingROI = false;
-let startX, startY, endX, endY;
-
-const roiCanvas = document.getElementById("roiCanvas");
-const ctx = roiCanvas.getContext("2d");
-const phaseImage = document.getElementById("phaseImage");
 
 function startROISelection() {
     if (!phaseImage.src || phaseImage.src.length === 0) {
