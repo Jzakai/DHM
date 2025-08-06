@@ -305,3 +305,57 @@ def compute_1d_thickness(imageArray):
 
     distances = np.linspace(0, len(thickness_values) * pixel_size_micron, len(thickness_values))
     return (distances, thickness_values)
+
+
+def select_roi(self, calledFromFunction=False):
+        """Interactive ROI selection on unwrapped_psi_image."""
+        if get_phase_difference() is None:
+            messagebox.showerror("Error", "No image data available for ROI selection.")
+            return
+
+        # Reset ROI state
+        self.roi_coords = None
+        self.roi_selected_flag = False
+
+        def onselect(eclick, erelease):
+            x1, y1 = int(eclick.xdata), int(eclick.ydata)
+            x2, y2 = int(erelease.xdata), int(erelease.ydata)
+            self.roi_coords = (min(y1, y2), max(y1, y2), min(x1, x2), max(x1, x2))
+            self.roi_selected_flag = True
+            plt.close()
+
+        fig, ax = plt.subplots()
+        ax.imshow(get_phase_difference(), cmap='jet')
+        ax.set_title("Draw ROI: Click-drag-release")
+
+        # Keep a reference to RectangleSelector
+        self.rectangle_selector = RectangleSelector(
+            ax, onselect,
+            useblit=True,
+            interactive=True,
+            button=[1],
+            minspanx=5,
+            minspany=5,
+            props=dict(facecolor='none', edgecolor='red', linestyle='--', linewidth=2)
+        )
+
+        plt.show(block=True)
+
+        # If user did not select ROI
+        if not self.roi_selected_flag or self.roi_coords is None:
+            print("ROI selection not done.")
+            return
+
+        r1, r2, c1, c2 = self.roi_coords
+        self.roi = self.unwrapped_psi_image[r1:r2, c1:c2]
+
+        if not calledFromFunction:
+            fig, ax = plt.subplots()
+            im = ax.imshow(self.roi, cmap='jet')
+            ax.set_title("Selected ROI")
+            ax.axis('off')
+            fig.colorbar(im, ax=ax)
+            fig.tight_layout()
+            plt.show()
+    
+            return reduce_noise(self.roi)

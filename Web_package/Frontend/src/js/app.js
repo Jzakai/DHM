@@ -154,6 +154,87 @@ async function fetch3DPlot() {
     }
 }
 
+let selectingROI = false;
+let startX, startY, endX, endY;
+
+const roiCanvas = document.getElementById("roiCanvas");
+const ctx = roiCanvas.getContext("2d");
+const phaseImage = document.getElementById("phaseImage");
+
+document.getElementById("selectRoiBtn").addEventListener("click", () => {
+    if (!phaseImage.src || phaseImage.src.length === 0) {
+        alert("No phase difference image available.");
+        return;
+    }
+    roiCanvas.width = phaseImage.width;
+    roiCanvas.height = phaseImage.height;
+    roiCanvas.style.width = phaseImage.width + "px";
+    roiCanvas.style.height = phaseImage.height + "px";
+
+    selectingROI = true;
+    ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
+    alert("Draw ROI on the image by clicking and dragging.");
+});
+
+roiCanvas.addEventListener("mousedown", (e) => {
+    if (!selectingROI) return;
+    const rect = roiCanvas.getBoundingClientRect();
+    startX = e.clientX - rect.left;
+    startY = e.clientY - rect.top;
+});
+
+roiCanvas.addEventListener("mousemove", (e) => {
+    if (!selectingROI || startX === undefined) return;
+    const rect = roiCanvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    const width = currentX - startX;
+    const height = currentY - startY;
+
+    ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(startX, startY, width, height);
+});
+
+roiCanvas.addEventListener("mouseup", async (e) => {
+    if (!selectingROI) return;
+    const rect = roiCanvas.getBoundingClientRect();
+    endX = e.clientX - rect.left;
+    endY = e.clientY - rect.top;
+
+    selectingROI = false;
+
+    // Convert to proper coordinates (integers)
+    const x1 = Math.round(Math.min(startX, endX));
+    const y1 = Math.round(Math.min(startY, endY));
+    const x2 = Math.round(Math.max(startX, endX));
+    const y2 = Math.round(Math.max(startY, endY));
+
+    // Send ROI to backend
+    await selectROI(x1, y1, x2, y2);
+});
+
+async function selectROI(x1, y1, x2, y2) {
+    try {
+        const response = await fetch("http://192.168.1.121:8000/select_roi", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ x1, y1, x2, y2 })
+        });
+        const data = await response.json();
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert("ROI selected and noise reduced!");
+        }
+    } catch (error) {
+        console.error("Error selecting ROI:", error);
+        alert("Error selecting ROI: " + error.message);
+    }
+}
+
+
 
 
 document.getElementById('mainGallery').addEventListener('click', () => {

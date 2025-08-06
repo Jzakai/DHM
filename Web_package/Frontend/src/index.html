@@ -89,8 +89,10 @@
       <!-- Region of Interest -->
       <div class="section" id="roi">
         <h2>Region of Interest</h2>
-        <button id="selectROI">Select ROI</button>
+        <button id="selectRoiBtn" type="button">Select ROI</button>
       </div>
+
+      
 
       <!-- Thickness Distributions -->
       <div class="section" id="thickness">
@@ -155,14 +157,18 @@
   <h4>Captured Output</h4>
   <div class="output-images" id="outputImages">
     <div class="output-box" id="spectrumOutput"><span>Spectrum</span></div>
-    <div class="output-box" id="phaseOutput"><span>Phase Difference</span></div>
-    <div class="output-box" id="roiOutput"><span>Region of Interest</span></div>
+    <div class="output-box" id="phaseOutput"><span>Phase Difference</span>
+      <div style="position:relative; display:inline-block;">
+      <img id="phaseImage" style="max-width:100%; border:1px solid #ccc;">
+      <canvas id="roiCanvas" style="position:absolute; left:0; top:0;"></canvas>
+  </div>
+    </div>
+    <div class="output-box" id="roiOutput" ><span>Region of Interest</span></div>
     <div class="output-box" id="output2D"><span>2D</span></div>
     <div class="output-box" id="output3D"><span>3D</span></div>
     <div class="output-box" id="output1D"><span>1D</span></div>
   </div>
 </div>
-
 
 
       </div>

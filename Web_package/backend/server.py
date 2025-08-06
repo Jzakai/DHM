@@ -14,12 +14,19 @@ from sys_functions import get_params, run_phase_difference
 from fastapi.staticfiles import StaticFiles
 import os
 
+import cv2
+import base64
+
 import plotly.graph_objs as go
 import plotly.io as pio
-from sys_functions import compute_3d_thickness, get_phase_difference
+from sys_functions import compute_3d_thickness, get_phase_difference, reduce_noise
 
 
 app = FastAPI()
+
+#globals
+roi_phase = None
+roi_coords = None
 
 
 
@@ -36,8 +43,6 @@ def read_imagefile(file) -> np.ndarray:
     image = Image.open(io.BytesIO(file))
     return np.array(image.convert("L"))
 
-import cv2
-import base64
 
 @app.post("/run_phase_difference")
 async def run_phase_difference_endpoint(
@@ -91,22 +96,33 @@ async def run_phase_difference_endpoint(
     }
 
 
+@app.post("/select_roi")
+async def select_roi_endpoint(coords: dict):
+    global roi_phase, roi_coords
+    phase = get_phase_difference()
+    if phase is None:
+        return {"error": "No phase difference computed yet."}
+
+    x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
+    roi = phase[y1:y2, x1:x2]
+    roi_phase, _, _ = reduce_noise(roi)
+    roi_coords = (x1, y1, x2, y2)
+
+    return {"status": "ROI selected and noise reduced", "shape": roi_phase.shape}
+
 @app.get("/compute_3d")
 async def compute_3d_endpoint():
-    phase_result = get_phase_difference()
+    phase_result = roi_phase if roi_phase is not None else get_phase_difference()
     if phase_result is None:
-        return {"error": "No phase result available. Please run phase difference first."}
+        return {"error": "No phase difference computed yet."}
 
     X, Y, Z = compute_3d_thickness(phase_result)
-
-    # Create interactive 3D plot
     fig = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, colorscale="Jet")])
     fig.update_layout(scene=dict(
         xaxis_title='X (μm)',
         yaxis_title='Y (μm)',
         zaxis_title='Thickness (μm)'
     ))
-
     html_str = pio.to_html(fig, full_html=False, include_plotlyjs='cdn')
     return {"html": html_str}
 
