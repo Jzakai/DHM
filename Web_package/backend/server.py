@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 import numpy as np
 from PIL import Image
 import io
-from sys_functions import get_params, run_phase_difference
+from sys_functions import get_params, get_points, run_phase_difference
 from fastapi.staticfiles import StaticFiles
 import os
 
@@ -19,7 +19,7 @@ import base64
 
 import plotly.graph_objs as go
 import plotly.io as pio
-from sys_functions import (compute_3d_thickness, get_phase_difference, reduce_noise)
+from sys_functions import (compute_3d_thickness, compute_1d_thickness, get_phase_difference, reduce_noise)
 
 
 app = FastAPI()
@@ -74,7 +74,7 @@ async def run_phase_difference_endpoint(
         "beam_type": beam_type,
         "threshold_strength": threshold_strength,
     }
-    get_params(params_dict)
+
 
     # Run computation (numeric phase result)
     phase_result = run_phase_difference(image_np, reference_np)
@@ -125,6 +125,36 @@ async def compute_3d_endpoint():
         "y": Y.tolist(),
         "z": Z.tolist()
     }
+
+
+@app.get("/compute_1d")
+async def compute_1d_endpoint(
+    x1: int = Form(...),
+    y1: int = Form(...),
+    x2: int = Form(...),
+    y2: int = Form(...),
+):
+    phase_result = roi_phase if roi_phase is not None else get_phase_difference()
+
+    points_dict = {
+        "x1": x1,
+        "y1": y1,
+        "x2": x2,
+        "y2": y2
+    }
+
+    get_points(points_dict)
+    print(phase_result)
+    if phase_result is None:
+        return {"error": "No phase difference computed yet."}
+
+    distances, thickness_values = compute_3d_thickness(x1, y1, x2, y2, phase_result)
+
+    return {
+        "distances": distances.tolist(), 
+        "thickness_values": thickness_values.tolist()
+    }
+
 
 
 

@@ -28,6 +28,45 @@ _beam_type_var = '1 beam'
 _threshold_var = 1.0
 unwrapped_psi = None
 
+
+# Initialize variables
+x1 = None
+y1 = None
+x2 = None
+y2 = None
+
+# Setters
+def set_x1(value):
+    global x1
+    x1 = value
+
+def set_y1(value):
+    global y1
+    y1 = value
+
+def set_x2(value):
+    global x2
+    x2 = value
+
+def set_y2(value):
+    global y2
+    y2 = value
+
+# Getters
+def get_x1():
+    return x1
+
+def get_y1():
+    return y1
+
+def get_x2():
+    return x2
+
+def get_y2():
+    return y2
+
+
+
 # Setters
 def set_pixel_size_var(value):
     global _pixel_size_var
@@ -173,6 +212,13 @@ def get_params(params:dict):
     set_filter_size_var(int(params.get("filter_size", 101)))
     set_beam_type_var (params.get("beam_type", "1 Beam"))
     set_threshold_var (float(params.get("threshold_strength", 1.0)))
+
+
+def get_points(params:dict):
+            set_x1(int(params.get("x1", 0)))
+            set_y1(int(params.get("y1", 0)))
+            set_x2(int(params.get("x2", 0)))
+            set_y2(int(params.get("y2", 0)))
 
 def run_phase_difference(imageArray,reference):
     """
