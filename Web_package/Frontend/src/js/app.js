@@ -50,7 +50,8 @@ document.addEventListener("DOMContentLoaded", function () {
         details.style.display = (details.style.display === 'flex') ? 'none' : 'flex';
     });
 
-    
+  });
+  
     function startROISelection() {
     if (!image.psi) {
         alert("No phase difference image available.");
@@ -279,7 +280,6 @@ async function fetch1DPlot() {
 
 
 }
-
 
 
 function selectPoints(psi) {
