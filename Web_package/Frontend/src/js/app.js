@@ -1,70 +1,92 @@
-let stream = null;
-const video = document.getElementById("video");
-const padStatus = document.getElementById("pad-status");
-
-let selectingROI = false;
-let startX, startY, endX, endY;
-
-const roiCanvas = document.getElementById("roiCanvas");
-const ctx = roiCanvas.getContext("2d");
-const phaseImage = document.getElementById("phaseImage");
-
-
-document.getElementById("openCam").addEventListener("click", async () => {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    video.srcObject = stream;
-  } catch (e) {
-    alert("Could not open camera: " + e.message);
-  }
-});
-
-document.getElementById("stopCam").addEventListener("click", () => {
-  if (stream) {
-    stream.getTracks().forEach(t => t.stop());
-    video.srcObject = null;
-    stream = null;
-  }
-});
-
-// Placeholder wiring for other buttons:
-document.getElementById("imageFile").addEventListener("change", () => {
-  console.log("Object image selected");
-});
-
-document.getElementById("refFile").addEventListener("change", () => {
-  console.log("Reference image selected");
-});
-
-document.getElementById("checkSpectrum").addEventListener("click", () => {
-  alert("Check Spectrum clicked");
-});
-
 document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("phaseDiff").addEventListener("click", (e) => {
-        e.preventDefault();
-        sendParams();
+    let stream = null;
+    const video = document.getElementById("video");
+    const padStatus = document.getElementById("pad-status");
+
+    let selectingROI = false;
+    let startX, startY, endX, endY;
+
+    const roiCanvas = document.getElementById("roiCanvas");
+    const ctx = roiCanvas.getContext("2d");
+    const phaseImage = document.getElementById("phaseImage");
+
+    document.getElementById("openCam").addEventListener("click", async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            video.srcObject = stream;
+        } catch (e) {
+            alert("Could not open camera: " + e.message);
+        }
     });
-});
 
-document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("stopCam").addEventListener("click", () => {
+        if (stream) {
+            stream.getTracks().forEach(t => t.stop());
+            video.srcObject = null;
+            stream = null;
+        }
+    });
+
+    document.getElementById("imageFile").addEventListener("change", () => console.log("Object image selected"));
+    document.getElementById("refFile").addEventListener("change", () => console.log("Reference image selected"));
+
+    document.getElementById("checkSpectrum").addEventListener("click", () => alert("Check Spectrum clicked"));
+    document.getElementById("phaseDiff").addEventListener("click", (e) => { e.preventDefault(); sendParams(); });
     document.getElementById("selectRoiBtn").addEventListener("click", startROISelection);
     document.getElementById("3dbtn").addEventListener("click", fetch3DPlot);
-});
+    document.getElementById("runAll").addEventListener("click", () => alert("Run All sequence started"));
+    document.getElementById("2dbtn").addEventListener("click", () => alert("2dbtn clicked"));
+    document.getElementById("1dbtn").addEventListener("click", () => alert("1dbtn clicked"));
+    document.getElementById('mainGallery').addEventListener('click', () => {
+        const details = document.getElementById('outputImages');
+        details.style.display = (details.style.display === 'flex') ? 'none' : 'flex';
+    });
 
+    // ROI Canvas Events
+    roiCanvas.addEventListener("mousedown", (e) => {
+        if (!selectingROI) return;
+        const rect = roiCanvas.getBoundingClientRect();
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+    });
 
-document.getElementById("runAll").addEventListener("click", () => {
-  alert("Run All sequence started");
-});
+    roiCanvas.addEventListener("mousemove", (e) => {
+        if (!selectingROI || startX === undefined) return;
+        const rect = roiCanvas.getBoundingClientRect();
+        const currentX = e.clientX - rect.left;
+        const currentY = e.clientY - rect.top;
+        ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
+    });
 
-document.getElementById("2dbtn").addEventListener("click", () => {
-  alert("2dbtn clicked");
-});
+    roiCanvas.addEventListener("mouseup", async (e) => {
+        if (!selectingROI) return;
+        const rect = roiCanvas.getBoundingClientRect();
+        endX = e.clientX - rect.left;
+        endY = e.clientY - rect.top;
+        selectingROI = false;
+        const x1 = Math.round(Math.min(startX, endX));
+        const y1 = Math.round(Math.min(startY, endY));
+        const x2 = Math.round(Math.max(startX, endX));
+        const y2 = Math.round(Math.max(startY, endY));
+        await selectROI(x1, y1, x2, y2);
+    });
 
-
-
-document.getElementById("1dbtn").addEventListener("click", () => {
-  alert("1dbtn clicked");
+    function startROISelection() {
+        if (!phaseImage.src || phaseImage.src.length === 0) {
+            alert("No phase difference image available.");
+            return;
+        }
+        roiCanvas.width = phaseImage.width;
+        roiCanvas.height = phaseImage.height;
+        roiCanvas.style.width = phaseImage.width + "px";
+        roiCanvas.style.height = phaseImage.height + "px";
+        selectingROI = true;
+        ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
+        alert("Draw ROI on the image by clicking and dragging.");
+    }
 });
 
 // Directional pad logic
@@ -159,59 +181,6 @@ async function fetch3DPlot() {
 }
 
 
-function startROISelection() {
-    if (!phaseImage.src || phaseImage.src.length === 0) {
-        alert("No phase difference image available.");
-        return;
-    }
-    roiCanvas.width = phaseImage.width;
-    roiCanvas.height = phaseImage.height;
-    roiCanvas.style.width = phaseImage.width + "px";
-    roiCanvas.style.height = phaseImage.height + "px";
-
-    selectingROI = true;
-    ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
-    alert("Draw ROI on the image by clicking and dragging.");
-}
-
-roiCanvas.addEventListener("mousedown", (e) => {
-    if (!selectingROI) return;
-    const rect = roiCanvas.getBoundingClientRect();
-    startX = e.clientX - rect.left;
-    startY = e.clientY - rect.top;
-});
-
-roiCanvas.addEventListener("mousemove", (e) => {
-    if (!selectingROI || startX === undefined) return;
-    const rect = roiCanvas.getBoundingClientRect();
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
-    const width = currentX - startX;
-    const height = currentY - startY;
-
-    ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(startX, startY, width, height);
-});
-
-roiCanvas.addEventListener("mouseup", async (e) => {
-    if (!selectingROI) return;
-    const rect = roiCanvas.getBoundingClientRect();
-    endX = e.clientX - rect.left;
-    endY = e.clientY - rect.top;
-
-    selectingROI = false;
-
-    // Convert to proper coordinates (integers)
-    const x1 = Math.round(Math.min(startX, endX));
-    const y1 = Math.round(Math.min(startY, endY));
-    const x2 = Math.round(Math.max(startX, endX));
-    const y2 = Math.round(Math.max(startY, endY));
-
-    // Send ROI to backend
-    await selectROI(x1, y1, x2, y2);
-});
 
 async function selectROI(x1, y1, x2, y2) {
     try {
