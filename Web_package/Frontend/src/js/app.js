@@ -39,9 +39,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-document.getElementById("selectROI").addEventListener("click", () => {
-  alert("Select ROI clicked");
-});
+document.getElementById("selectRoiBtn").addEventListener("click", startROISelection());
 
 document.getElementById("runAll").addEventListener("click", () => {
   alert("Run All sequence started");
@@ -161,7 +159,7 @@ const roiCanvas = document.getElementById("roiCanvas");
 const ctx = roiCanvas.getContext("2d");
 const phaseImage = document.getElementById("phaseImage");
 
-document.getElementById("selectRoiBtn").addEventListener("click", () => {
+function startROISelection() {
     if (!phaseImage.src || phaseImage.src.length === 0) {
         alert("No phase difference image available.");
         return;
@@ -174,7 +172,7 @@ document.getElementById("selectRoiBtn").addEventListener("click", () => {
     selectingROI = true;
     ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
     alert("Draw ROI on the image by clicking and dragging.");
-});
+}
 
 roiCanvas.addEventListener("mousedown", (e) => {
     if (!selectingROI) return;
@@ -233,7 +231,6 @@ async function selectROI(x1, y1, x2, y2) {
         alert("Error selecting ROI: " + error.message);
     }
 }
-
 
 
 
