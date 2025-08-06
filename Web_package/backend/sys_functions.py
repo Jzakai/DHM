@@ -26,6 +26,7 @@ _filter_size_var = 100
 _wavelength_var = 0.65  # Added wavelength variable
 _beam_type_var = '1 beam'
 _threshold_var = 1.0
+unwrapped_psi = None
 
 # Setters
 def set_pixel_size_var(value):
@@ -97,6 +98,9 @@ def get_threshold_var():
 def FFT_calc(A):
     A = A.astype(float)
     return np.fft.fftshift(np.fft.fft2(A))
+
+def get_phase_difference():
+    return unwrapped_psi
 
 
 def create_mask(imageArray, max_coords):
@@ -210,23 +214,22 @@ def run_phase_difference(imageArray,reference):
     Fx = np.linspace(-Fs_x / 2, Fs_x / 2 - dFx, Nx)
     Fy = np.linspace(-Fs_y / 2, Fs_y / 2 - dFy, Ny)
 
-    unwrapped_psi = Fast_Unwrap(Fx, Fy, phase1)
-    unwrapped_psi -= np.min(unwrapped_psi)
-
-    # Optional cleaning based on threshold_strength
-    mean = np.mean(unwrapped_psi)
-    psi_inverted = 2 * mean - unwrapped_psi
-    clean_psi = np.copy(unwrapped_psi)
-    clean_psi[unwrapped_psi < mean] = mean
-    clean_psi_inverted = np.copy(psi_inverted)
-    clean_psi_inverted[psi_inverted < mean] = mean
-    combined_clean = np.maximum(clean_psi, clean_psi_inverted)
-
     if get_beam_type_var() == "1 Beam":
-        return combined_clean
-    else:
+        unwrapped_psi = Fast_Unwrap(Fx, Fy, phase1)
+        unwrapped_psi -= np.min(unwrapped_psi)
+        mean = np.mean(unwrapped_psi)
+        psi_inverted = 2 * mean - unwrapped_psi
+        clean_psi = np.copy(unwrapped_psi)
+        clean_psi[unwrapped_psi < mean] = mean
+        clean_psi_inverted = np.copy(psi_inverted)
+        clean_psi_inverted[psi_inverted < mean] = mean
+        unwrapped_psi = np.maximum(clean_psi, clean_psi_inverted)
         return unwrapped_psi
-    
+    else:
+        unwrapped_psi = Fast_Unwrap(Fx, Fy, phase1)
+        unwrapped_psi -= np.min(unwrapped_psi)
+        return unwrapped_psi
+        
 
 #removed threshold param from this function
 def reduce_noise(imageArray):

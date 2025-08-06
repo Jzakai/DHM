@@ -51,8 +51,12 @@ document.getElementById("2dbtn").addEventListener("click", () => {
   alert("2dbtn clicked");
 });
 
-document.getElementById("3dbtn").addEventListener("click", () => {
-  alert("3dbtn clicked");
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("3dbtn").addEventListener("click", (e) => {
+        e.preventDefault();
+        fetch3DPlot();
+    });
 });
 
 document.getElementById("1dbtn").addEventListener("click", () => {
@@ -135,6 +139,20 @@ async function sendParams() {
 }
 
 
+async function fetch3DPlot() {
+    try {
+        const response = await fetch("http://192.168.1.121:8000/compute_3d");
+        const data = await response.json();
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        document.getElementById("output3D").innerHTML = `<span>3D</span>${data.html}`;
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error: " + error.message);
+    }
+}
 
 
 

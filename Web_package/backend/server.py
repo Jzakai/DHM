@@ -14,6 +14,10 @@ from sys_functions import get_params, run_phase_difference
 from fastapi.staticfiles import StaticFiles
 import os
 
+import plotly.graph_objs as go
+import plotly.io as pio
+from sys_functions import compute_3d_thickness, get_phase_difference
+
 
 app = FastAPI()
 
@@ -85,6 +89,27 @@ async def run_phase_difference_endpoint(
         "min": float(phase_result.min()),
         "max": float(phase_result.max())
     }
+
+
+@app.get("/compute_3d")
+async def compute_3d_endpoint():
+    phase_result = get_phase_difference()
+    if phase_result is None:
+        return {"error": "No phase result available. Please run phase difference first."}
+
+    X, Y, Z = compute_3d_thickness(phase_result)
+
+    # Create interactive 3D plot
+    fig = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, colorscale="Jet")])
+    fig.update_layout(scene=dict(
+        xaxis_title='X (μm)',
+        yaxis_title='Y (μm)',
+        zaxis_title='Thickness (μm)'
+    ))
+
+    html_str = pio.to_html(fig, full_html=False, include_plotlyjs='cdn')
+    return {"html": html_str}
+
 
 
 # Calculate absolute path to frontend folder
