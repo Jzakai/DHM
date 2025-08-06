@@ -114,6 +114,7 @@ async def select_roi_endpoint(coords: dict):
 @app.get("/compute_3d")
 async def compute_3d_endpoint():
     phase_result = roi_phase if roi_phase is not None else get_phase_difference()
+    print(phase_result)
     if phase_result is None:
         return {"error": "No phase difference computed yet."}
 
