@@ -117,14 +117,12 @@ async def compute_3d_endpoint():
         return {"error": "No phase difference computed yet."}
 
     X, Y, Z = compute_3d_thickness(phase_result)
-    fig = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, colorscale="Jet")])
-    fig.update_layout(scene=dict(
-        xaxis_title='X (μm)',
-        yaxis_title='Y (μm)',
-        zaxis_title='Thickness (μm)'
-    ))
-    html_str = pio.to_html(fig, full_html=False, include_plotlyjs='cdn')
-    return {"html": html_str}
+
+    return {
+        "x": X.tolist(),
+        "y": Y.tolist(),
+        "z": Z.tolist()
+    }
 
 
 

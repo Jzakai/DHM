@@ -173,12 +173,29 @@ async function fetch3DPlot() {
             alert(data.error);
             return;
         }
-        document.getElementById("output3D").innerHTML = `<span>3D</span>${data.html}`;
+        const output3D = document.getElementById("output3D");
+        output3D.innerHTML = `<span>3D</span><div id="plot3d" style="height:400px;"></div>`;
+
+        Plotly.newPlot('plot3d', [{
+            type: 'surface',
+            x: data.x,
+            y: data.y,
+            z: data.z,
+            colorscale: 'Jet'
+        }], {
+            scene: {
+                xaxis: {title: 'X (μm)'},
+                yaxis: {title: 'Y (μm)'},
+                zaxis: {title: 'Thickness (μm)'}
+            },
+            margin: {l:0, r:0, b:0, t:0}
+        });
     } catch (error) {
         console.error("Error:", error);
         alert("Error: " + error.message);
     }
 }
+
 
 
 
