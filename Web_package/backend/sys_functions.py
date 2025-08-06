@@ -273,7 +273,7 @@ def compute_3d_thickness(imageArray):
 
 
 
-def compute_1d_thickness(imageArray):
+def compute_1d_thickness(x1, y1, x2, y2, imageArray):
 
     thickness_1d = compute_2d_thickness(imageArray)
     thickness_1d = thickness_1d - thickness_1d.min()
@@ -282,26 +282,13 @@ def compute_1d_thickness(imageArray):
     magnification = float(get_magnification_var())
     pixel_size_micron = cam_pix_size / magnification
 
-    fig, ax = plt.subplots()
-    ax.imshow(thickness_1d, cmap='jet')
-    ax.set_title("Click two points to extract 1D profile", fontsize=14)
-    pts = plt.ginput(2)
+   
 
-    if len(pts) != 2:
-        plt.close(fig)
-        messagebox.showerror("Error", "Please select exactly two points.")
-        return
-
-    (x1, y1), (x2, y2) = pts
     x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
     rr, cc = line(y1, x1, y2, x2)
 
     rr = np.clip(rr, 0, thickness_1d.shape[0] - 1)
     cc = np.clip(cc, 0, thickness_1d.shape[1] - 1)
-
-    ax.plot([x1, x2], [y1, y2], 'w-', linewidth=2)
-    ax.set_title("Selected Line for 1D Profile", fontsize=14)
-    plt.close( )
     thickness_values = thickness_1d[rr, cc]
 
     distances = np.linspace(0, len(thickness_values) * pixel_size_micron, len(thickness_values))
