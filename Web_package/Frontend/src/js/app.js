@@ -50,9 +50,9 @@ document.addEventListener("DOMContentLoaded", function () {
         details.style.display = (details.style.display === 'flex') ? 'none' : 'flex';
     });
 
-  });
-  
-    function startROISelection() {
+});
+
+function startROISelection() {
     if (!image.psi) {
         alert("No phase difference image available.");
         return;
@@ -238,48 +238,37 @@ async function fetch3DPlot() {
 
 
 async function fetch1DPlot() {
-    psi = image.psi
-    selectPoints(psi)
-    point1 = point1;
-    point2 = p2;
-
-
-    console.log('Selected points:', point1, point2);
-    const x1 = Math.round(p1.x);
-    const y1 = Math.round(p1.y);
-    const x2 = Math.round(p2.x);
-    const y2 = Math.round(p2.y);
-
-
     try {
-        const response = await fetch("http://192.168.1.121:8000/compute_1d", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                x1,
-                y1,
-                x2,
-                y2
-            })
-        });
+        const response = await fetch("http://192.168.1.121:8000/compute_1d");
         const data = await response.json();
         if (data.error) {
             alert(data.error);
             return;
         }
         const output1D = document.getElementById("output1D");
-        output1D.innerHTML = `<span>3D</span><div id="plot1d" style="height:400px;"></div>`;
+        output1D.innerHTML = `<span>1D</span><div id="plot1d" style="height:400px;"></div>`;
 
+        Plotly.newPlot('plot1d', [{
+            type: 'scatter',
+            mode: 'lines+markers',   // or just 'lines' or 'markers' if you prefer
+            x: data.distances,
+            y: data.thickness_values,
+            line: { color: 'blue' },
+            marker: { size: 6 }
+        }], {
+            xaxis: { title: 'Distance (μm)' },
+            yaxis: { title: 'Thickness (μm)' },
+            margin: { l: 50, r: 20, b: 50, t: 20 }
+        });
 
+        
     } catch (error) {
         console.error("Error:", error);
         alert("Error: " + error.message);
     }
-
-
 }
+
+
 
 
 function selectPoints(psi) {

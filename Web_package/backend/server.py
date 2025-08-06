@@ -16,6 +16,7 @@ import os
 
 import cv2
 import base64
+from pydantic import BaseModel
 
 import plotly.graph_objs as go
 import plotly.io as pio
@@ -127,13 +128,15 @@ async def compute_3d_endpoint():
     }
 
 
-@app.get("/compute_1d")
-async def compute_1d_endpoint(
-    x1: int = Form(...),
-    y1: int = Form(...),
-    x2: int = Form(...),
-    y2: int = Form(...),
-):
+class Points(BaseModel):
+    x1: int
+    y1: int
+    x2: int
+    y2: int
+
+@app.post("/compute_1d")
+async def compute_1d_endpoint(points: Points):
+    x1, y1, x2, y2 = points.x1, points.y1, points.x2, points.y2
     phase_result = roi_phase if roi_phase is not None else get_phase_difference()
 
     points_dict = {
@@ -144,17 +147,45 @@ async def compute_1d_endpoint(
     }
 
     get_points(points_dict)
-    print(phase_result)
     if phase_result is None:
         return {"error": "No phase difference computed yet."}
 
-    distances, thickness_values = compute_3d_thickness(x1, y1, x2, y2, phase_result)
+    distances, thickness_values = compute_1d_thickness(x1, y1, x2, y2, phase_result)
 
     return {
         "distances": distances.tolist(), 
         "thickness_values": thickness_values.tolist()
     }
 
+
+class Points(BaseModel):
+    x1: int
+    y1: int
+    x2: int
+    y2: int
+
+@app.post("/compute_1d")
+async def compute_1d_endpoint(points: Points):
+    x1, y1, x2, y2 = points.x1, points.y1, points.x2, points.y2
+    phase_result = roi_phase if roi_phase is not None else get_phase_difference()
+
+    points_dict = {
+        "x1": x1,
+        "y1": y1,
+        "x2": x2,
+        "y2": y2
+    }
+
+    get_points(points_dict)
+    if phase_result is None:
+        return {"error": "No phase difference computed yet."}
+
+    distances, thickness_values = compute_1d_thickness(x1, y1, x2, y2, phase_result)
+
+    return {
+        "distances": distances.tolist(), 
+        "thickness_values": thickness_values.tolist()
+    }
 
 
 
