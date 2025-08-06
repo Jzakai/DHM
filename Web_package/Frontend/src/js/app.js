@@ -50,52 +50,81 @@ document.addEventListener("DOMContentLoaded", function () {
         details.style.display = (details.style.display === 'flex') ? 'none' : 'flex';
     });
 
-    // ROI Canvas Events
-    roiCanvas.addEventListener("mousedown", (e) => {
-        if (!selectingROI) return;
-        const rect = roiCanvas.getBoundingClientRect();
-        startX = e.clientX - rect.left;
-        startY = e.clientY - rect.top;
-    });
-
-    roiCanvas.addEventListener("mousemove", (e) => {
-        if (!selectingROI || startX === undefined) return;
-        const rect = roiCanvas.getBoundingClientRect();
-        const currentX = e.clientX - rect.left;
-        const currentY = e.clientY - rect.top;
-        ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
-    });
-
-    roiCanvas.addEventListener("mouseup", async (e) => {
-        if (!selectingROI) return;
-        const rect = roiCanvas.getBoundingClientRect();
-        endX = e.clientX - rect.left;
-        endY = e.clientY - rect.top;
-        selectingROI = false;
-        const x1 = Math.round(Math.min(startX, endX));
-        const y1 = Math.round(Math.min(startY, endY));
-        const x2 = Math.round(Math.max(startX, endX));
-        const y2 = Math.round(Math.max(startY, endY));
-        await selectROI(x1, y1, x2, y2);
-    });
-
+    
     function startROISelection() {
-        if (!phaseImage.src || phaseImage.src.length === 0) {
-            alert("No phase difference image available.");
-            return;
-        }
-        roiCanvas.width = phaseImage.width;
-        roiCanvas.height = phaseImage.height;
-        roiCanvas.style.width = phaseImage.width + "px";
-        roiCanvas.style.height = phaseImage.height + "px";
-        selectingROI = true;
-        ctx.clearRect(0, 0, roiCanvas.width, roiCanvas.height);
-        alert("Draw ROI on the image by clicking and dragging.");
+    if (!image.psi) {
+        alert("No phase difference image available.");
+        return;
     }
-});
+
+    const popup = window.open('', 'ImagePopup', 'width=800,height=600');
+    popup.document.write(`
+    <html>
+    <head>
+      <title>Select ROI</title>
+      <style>
+        body { margin: 0; }
+        canvas { display: block; cursor: crosshair; }
+      </style>
+    </head>
+    <body>
+      <canvas id="canvas"></canvas>
+      <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.src = "data:image/png;base64,${image.psi}";
+        
+        let startX, startY, endX, endY, drawing = false;
+
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+        };
+
+        canvas.addEventListener('mousedown', e => {
+          const rect = canvas.getBoundingClientRect();
+          startX = e.clientX - rect.left;
+          startY = e.clientY - rect.top;
+          drawing = true;
+        });
+
+        canvas.addEventListener('mousemove', e => {
+          if (!drawing) return;
+          const rect = canvas.getBoundingClientRect();
+          endX = e.clientX - rect.left;
+          endY = e.clientY - rect.top;
+          ctx.drawImage(img, 0, 0);
+          ctx.strokeStyle = 'red';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+        });
+
+        canvas.addEventListener('mouseup', e => {
+          drawing = false;
+          const rect = canvas.getBoundingClientRect();
+          endX = e.clientX - rect.left;
+          endY = e.clientY - rect.top;
+          const coords = {
+            x1: Math.round(Math.min(startX, endX)),
+            y1: Math.round(Math.min(startY, endY)),
+            x2: Math.round(Math.max(startX, endX)),
+            y2: Math.round(Math.max(startY, endY))
+          };
+          window.opener.receiveROI(coords);
+          setTimeout(() => window.close(), 500);
+        });
+      <\/script>
+    </body>
+    </html>
+    `);
+}
+
+function receiveROI(coords) {
+    console.log("Selected ROI:", coords);
+    selectROI(coords.x1, coords.y1, coords.x2, coords.y2);
+}
 
 // Directional pad logic
 const quads = document.querySelectorAll(".quad");
