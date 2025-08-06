@@ -181,6 +181,7 @@ def run_phase_difference(imageArray,reference):
     np.ndarray
         Unwrapped phase map.
     """
+    global unwrapped_psi
 
     Ny, Nx = imageArray.shape
     A1_shiftft = FFT_calc(imageArray)
