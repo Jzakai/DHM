@@ -19,7 +19,7 @@ import base64
 
 import plotly.graph_objs as go
 import plotly.io as pio
-from sys_functions import compute_3d_thickness, get_phase_difference, reduce_noise
+from sys_functions import (compute_3d_thickness, get_phase_difference, reduce_noise)
 
 
 app = FastAPI()
@@ -100,6 +100,7 @@ async def run_phase_difference_endpoint(
 async def select_roi_endpoint(coords: dict):
     global roi_phase, roi_coords
     phase = get_phase_difference()
+    print(phase)
     if phase is None:
         return {"error": "No phase difference computed yet."}
 
