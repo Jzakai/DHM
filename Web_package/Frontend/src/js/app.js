@@ -261,11 +261,17 @@ async function fetch3DPlot() {
 //1d profile
 
 function startPointsSelection() {
-    if (!image.roi) {
+    if (!image.roi && !image.psi ) {
         alert("Please compute the phase difference first.");
         return;
     }
-    selectPoints(image.roi);
+
+    else if(image.roi != null)
+        selectPoints(image.roi);
+
+    else
+        selectPoints(image.psi);
+
 }
 
 function selectPoints(psi) {
