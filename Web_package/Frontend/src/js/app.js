@@ -297,7 +297,6 @@ async function fetch3DPlot() {
 }
 
 
-<<<<<<< Updated upstream
 //1d profile
 
 function startPointsSelection() {
@@ -492,7 +491,6 @@ async function selectROI(x1, y1, x2, y2) {
     }
 }
 
-=======
 const toggleBtn = document.getElementById('toggleBtn');
 const slideDiv = document.getElementById('slideDiv');
 
@@ -501,7 +499,6 @@ toggleBtn.addEventListener('click', () => {
 });
 
 
->>>>>>> Stashed changes
 
 document.getElementById('mainGallery').addEventListener('click', () => {
     const details = document.getElementById('outputImages');
