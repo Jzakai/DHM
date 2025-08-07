@@ -163,6 +163,50 @@ async def select_roi_endpoint(coords: dict):
         "roi_image": roi_base64
     }
 
+from fastapi.responses import StreamingResponse
+import cv2
+import numpy as np
+from pypylon import pylon
+
+camera = None
+converter = None
+
+@app.get("/start_camera")
+async def start_camera():
+    global camera, converter
+    try:
+        camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+        camera.Open()
+        camera.ExposureAuto.SetValue('Off')
+        camera.ExposureTime.SetValue(150.0)
+        camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+
+        converter = pylon.ImageFormatConverter()
+        converter.OutputPixelFormat = pylon.PixelType_Mono8
+        converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
+
+        return {"status": "Camera started"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/camera_feed")
+def video_feed():
+    def generate():
+        while camera and camera.IsGrabbing():
+            grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+            if grab_result.GrabSucceeded():
+                image = converter.Convert(grab_result)
+                frame = image.GetArray()
+                ret, buffer = cv2.imencode('.jpg', frame)
+                if not ret:
+                    continue
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+            grab_result.Release()
+
+    return StreamingResponse(generate(), media_type='multipart/x-mixed-replace; boundary=frame')
+
 
 # Calculate absolute path to frontend folder
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")

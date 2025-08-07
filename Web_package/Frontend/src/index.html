@@ -155,13 +155,17 @@
     <div class="right">
       
       <div class="camera-box">
-        <div class="camera-header">Camera</div>
-        <video id="video" autoplay playsinline></video>
+        <div id="cameraContainer" style="margin-top: 20px;">
+    <h3>Live Camera</h3>
+    <img id="cameraStream" style="max-width: 100%;" />
+    </div>
+
         <div class="controls">
           <button id="openCam">Open Camera</button>
           <button id="stopCam" class="secondary">Stop Camera</button>
           <button id="saveImg" class="secondary">Stop Image</button>
         </div>
+        
         <div class="small-text">Camera feed from local webcam (falls back to placeholder if denied).</div>
 
         <!-- Directional pad -->
