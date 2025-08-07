@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("imageFile").addEventListener("change", () => console.log("Object image selected"));
     document.getElementById("refFile").addEventListener("change", () => console.log("Reference image selected"));
+    document.getElementById("1dbtn").addEventListener("click", (e) => { e.preventDefault(); startPointsSelection() });
 
     document.getElementById("checkSpectrum").addEventListener("click", () => alert("Check Spectrum clicked"));
     document.getElementById("phaseDiff").addEventListener("click", (e) => { e.preventDefault(); sendParams(); });
@@ -46,7 +47,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("3dbtn").addEventListener("click", fetch3DPlot);
     document.getElementById("runAll").addEventListener("click", () => alert("Run All sequence started"));
     document.getElementById("2dbtn").addEventListener("click", () => alert("2dbtn clicked"));
-    document.getElementById("1dbtn").addEventListener("click", startPointsSelection);
     document.getElementById('mainGallery').addEventListener('click', () => {
         const details = document.getElementById('outputImages');
         details.style.display = (details.style.display === 'flex') ? 'none' : 'flex';
@@ -300,12 +300,12 @@ async function fetch3DPlot() {
 //1d profile
 
 function startPointsSelection() {
-    if (!image.roi && !image.psi ) {
+    if (!image.roi && !image.psi) {
         alert("Please compute the phase difference first.");
         return;
     }
 
-    else if(image.roi != null)
+    else if (image.roi != null)
         selectPoints(image.roi);
 
     else
@@ -315,7 +315,7 @@ function startPointsSelection() {
 
 function selectPoints(psi) {
     if (!psi) {
-        alert("No phase image available. Please run phase difference first.");
+        alert("No phase image avai  lable. Please run phase difference first.");
         return;
     }
 
@@ -440,10 +440,14 @@ async function fetch1DPlot() {
             return;
         }
 
-        // Plot using Plotly
         const output1D = document.getElementById("output1D");
-        output1D.innerHTML = `<span>1D</span><div id="plot1d" style="height:400px;"></div>`;
 
+        // Ensure parent has height via CSS (see below)
+        output1D.innerHTML = `
+  <div id="plot1d" style="width:100%; height:100%;"></div>
+`;
+
+        // Create the plot
         Plotly.newPlot("plot1d", [{
             x: data.x,
             y: data.y,
@@ -454,6 +458,8 @@ async function fetch1DPlot() {
             xaxis: { title: "Distance (μm)" },
             yaxis: { title: "Thickness (μm)" },
             margin: { l: 40, r: 10, b: 40, t: 10 }
+        }, {
+            responsive: true
         });
 
     } catch (error) {
@@ -479,7 +485,6 @@ async function selectROI(x1, y1, x2, y2) {
 
             // Optional: display the ROI image
             document.getElementById("roiOutput").innerHTML = `
-              <span>ROI</span>
               <img src="data:image/png;base64,${data.roi_image}" style="max-width:100%; border:1px solid #ccc;">
             `;
 
