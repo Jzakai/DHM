@@ -259,6 +259,14 @@ async function fetch3DPlot() {
 
 //1d profile
 
+function startPointsSelection() {
+    if (!image.psi) {
+        alert("Please compute the phase difference first.");
+        return;
+    }
+    selectPoints(image.psi);
+}
+
 function selectPoints(psi) {
     if (!psi) {
         alert("No phase image available. Please run phase difference first.");

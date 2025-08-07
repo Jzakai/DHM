@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 import numpy as np
 from PIL import Image
 import io
-from sys_functions import get_params, get_points, run_phase_difference
+from sys_functions import get_params, run_phase_difference
 from fastapi.staticfiles import StaticFiles
 import os
 
