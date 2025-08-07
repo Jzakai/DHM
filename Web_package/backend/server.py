@@ -149,16 +149,18 @@ async def select_roi_endpoint(coords: dict):
     norm_roi = (roi_phase - np.min(roi_phase)) / (np.max(roi_phase) - np.min(roi_phase) + 1e-8)
     roi_uint8 = (norm_roi * 255).astype(np.uint8)
 
-    # Convert to base64-encoded PNG
-    img = Image.fromarray(roi_uint8)
-    buffered = io.BytesIO()
-    img.save(buffered, format="PNG")
-    encoded_roi_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    norm_roi = cv2.normalize(roi_phase, None, 0, 255, cv2.NORM_MINMAX)
+    norm_roi = norm_roi.astype(np.uint8)
+    colored_roi = cv2.applyColorMap(norm_roi, cv2.COLORMAP_JET)
 
+    _, buffer = cv2.imencode(".png", colored_roi)
+    roi_base64 = base64.b64encode(buffer).decode("utf-8")
+
+    
     return {
         "status": "ROI selected and noise reduced",
         "shape": roi_phase.shape,
-        "roi_image": encoded_roi_image
+        "roi_image": roi_base64
     }
 
 
