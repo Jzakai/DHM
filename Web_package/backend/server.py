@@ -132,6 +132,29 @@ async def compute_1d(data: dict):
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
+
+from pydantic import BaseModel
+
+class ROIRequest(BaseModel):
+    x1: int
+    y1: int
+    x2: int
+    y2: int
+
+@app.post("/select_roi")
+async def select_roi(data: ROIRequest):
+    global roi_phase, roi_coords
+
+    phase_result = get_phase_difference()
+    if phase_result is None:
+        return JSONResponse(content={"error": "No phase difference image available."}, status_code=400)
+
+    x1, y1, x2, y2 = data.x1, data.y1, data.x2, data.y2
+    roi_phase = reduce_noise(phase_result[y1:y2, x1:x2])  # cropped + filtered
+    roi_coords = (x1, y1, x2, y2)
+
+    return {"message": "ROI selected and noise reduced."}
+
 # Calculate absolute path to frontend folder
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
 app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
