@@ -208,6 +208,43 @@ def video_feed():
     return StreamingResponse(generate(), media_type='multipart/x-mixed-replace; boundary=frame')
 
 
+@app.post("/set_exposure")
+def set_exposure(exposure: dict):
+    global camera
+    try:
+        value = exposure["exposure"]
+        if camera and camera.IsOpen():
+            camera.ExposureTime.SetValue(float(value))
+            return {"success": True}
+        else:
+            return {"error": "Camera not open"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.post("/capture_image")
+def capture_image(data: dict):
+    global camera, converter, last_frame, reference, image_np
+    try:
+        if not camera.IsGrabbing():
+            return {"error": "Camera not running"}
+        grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+        if grab_result.GrabSucceeded():
+            img = converter.Convert(grab_result)
+            frame = img.GetArray()
+            last_frame = frame
+            if data["type"] == "reference":
+                reference = frame
+            elif data["type"] == "object":
+                image_np = frame
+            else:
+                return {"error": "Invalid type"}
+            return {"success": True}
+        else:
+            return {"error": "Failed to grab image"}
+    except Exception as e:
+        return {"error": str(e)}
+
 # Calculate absolute path to frontend folder
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
 app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")

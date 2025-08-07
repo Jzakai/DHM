@@ -21,6 +21,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     document.getElementById("openCam").addEventListener("click", initializeCamera);
+    document.getElementById("setExposureBtn").addEventListener("click", setExposure);
+    document.getElementById("captureImageBtn").addEventListener("click", captureImage);
 
 
     document.getElementById("stopCam").addEventListener("click", () => {
@@ -527,5 +529,45 @@ async function initializeCamera() {
         }
     } catch (err) {
         alert("Error connecting to server: " + err.message);
+    }
+}
+
+async function setExposure() {
+    const exposureValue = document.getElementById("exposureInput").value;
+    try {
+        const res = await fetch("http://192.168.1.121:8000/set_exposure", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ exposure: parseFloat(exposureValue) })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("Exposure set to " + exposureValue + " μs");
+        } else {
+            alert("Failed to set exposure.");
+        }
+    } catch (error) {
+        console.error("Exposure Error:", error);
+        alert("Error setting exposure: " + error.message);
+    }
+}
+
+async function captureImage() {
+    const type = document.getElementById("captureType").value; // "object" or "reference"
+    try {
+        const res = await fetch("http://192.168.1.121:8000/capture_image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: type })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`Captured and set image as ${type}`);
+        } else {
+            alert("Capture failed");
+        }
+    } catch (error) {
+        console.error("Capture Error:", error);
+        alert("Error capturing image: " + error.message);
     }
 }

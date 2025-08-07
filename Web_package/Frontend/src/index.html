@@ -164,6 +164,15 @@
           <button id="openCam">Open Camera</button>
           <button id="stopCam" class="secondary">Stop Camera</button>
           <button id="saveImg" class="secondary">Stop Image</button>
+          <label for="exposureInput">Exposure (μs):</label>
+          <input type="number" id="exposureInput" value="150" step="10" />
+          <button id="setExposureBtn">Set Exposure</button>
+
+          <button id="captureImageBtn">Capture Image</button>
+          <select id="captureType">
+            <option value="object">As Object</option>
+            <option value="reference">As Reference</option>
+</select>
         </div>
         
         <div class="small-text">Camera feed from local webcam (falls back to placeholder if denied).</div>
