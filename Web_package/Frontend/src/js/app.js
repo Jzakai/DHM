@@ -44,13 +44,34 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("3dbtn").addEventListener("click", fetch3DPlot);
     document.getElementById("runAll").addEventListener("click", () => alert("Run All sequence started"));
     document.getElementById("2dbtn").addEventListener("click", () => alert("2dbtn clicked"));
-    document.getElementById("1dbtn").addEventListener("click", fetch1DPlot);
+    document.getElementById("1dbtn").addEventListener("click", startPointsSelection);
     document.getElementById('mainGallery').addEventListener('click', () => {
         const details = document.getElementById('outputImages');
         details.style.display = (details.style.display === 'flex') ? 'none' : 'flex';
     });
 
 });
+
+async function selectROI(x1, y1, x2, y2) {
+    try {
+        const response = await fetch("http://192.168.1.121:8000/select_roi", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ x1, y1, x2, y2 })
+        });
+        const data = await response.json();
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert("ROI selected and noise reduced!");
+        }
+    } catch (error) {
+        console.error("Error selecting ROI:", error);
+        alert("Error selecting ROI: " + error.message);
+    }
+}
+
+
 
 function startROISelection() {
     if (!image.psi) {
@@ -60,66 +81,66 @@ function startROISelection() {
 
     const popup = window.open('', 'ImagePopup', 'width=800,height=600');
     popup.document.write(`
-    <html>
-    <head>
-      <title>Select ROI</title>
-      <style>
-        body { margin: 0; }
-        canvas { display: block; cursor: crosshair; }
-      </style>
-    </head>
-    <body>
-      <canvas id="canvas"></canvas>
-      <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.src = "data:image/png;base64,${image.psi}";
-        
-        let startX, startY, endX, endY, drawing = false;
+            <html>
+            <head>
+            <title>Select ROI</title>
+            <style>
+                body { margin: 0; }
+                canvas { display: block; cursor: crosshair; }
+            </style>
+            </head>
+            <body>
+            <canvas id="canvas"></canvas>
+            <script>
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.src = "data:image/png;base64,${image.psi}";
+                
+                let startX, startY, endX, endY, drawing = false;
 
-        img.onload = function() {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-        };
+                img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                };
 
-        canvas.addEventListener('mousedown', e => {
-          const rect = canvas.getBoundingClientRect();
-          startX = e.clientX - rect.left;
-          startY = e.clientY - rect.top;
-          drawing = true;
-        });
+                canvas.addEventListener('mousedown', e => {
+                const rect = canvas.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+                drawing = true;
+                });
 
-        canvas.addEventListener('mousemove', e => {
-          if (!drawing) return;
-          const rect = canvas.getBoundingClientRect();
-          endX = e.clientX - rect.left;
-          endY = e.clientY - rect.top;
-          ctx.drawImage(img, 0, 0);
-          ctx.strokeStyle = 'red';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(startX, startY, endX - startX, endY - startY);
-        });
+                canvas.addEventListener('mousemove', e => {
+                if (!drawing) return;
+                const rect = canvas.getBoundingClientRect();
+                endX = e.clientX - rect.left;
+                endY = e.clientY - rect.top;
+                ctx.drawImage(img, 0, 0);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+                });
 
-        canvas.addEventListener('mouseup', e => {
-          drawing = false;
-          const rect = canvas.getBoundingClientRect();
-          endX = e.clientX - rect.left;
-          endY = e.clientY - rect.top;
-          const coords = {
-            x1: Math.round(Math.min(startX, endX)),
-            y1: Math.round(Math.min(startY, endY)),
-            x2: Math.round(Math.max(startX, endX)),
-            y2: Math.round(Math.max(startY, endY))
-          };
-          window.opener.receiveROI(coords);
-          setTimeout(() => window.close(), 500);
-        });
-      <\/script>
-    </body>
-    </html>
-    `);
+                canvas.addEventListener('mouseup', e => {
+                drawing = false;
+                const rect = canvas.getBoundingClientRect();
+                endX = e.clientX - rect.left;
+                endY = e.clientY - rect.top;
+                const coords = {
+                    x1: Math.round(Math.min(startX, endX)),
+                    y1: Math.round(Math.min(startY, endY)),
+                    x2: Math.round(Math.max(startX, endX)),
+                    y2: Math.round(Math.max(startY, endY))
+                };
+                window.opener.receiveROI(coords);
+                setTimeout(() => window.close(), 500);
+                });
+            <\/script>
+            </body>
+            </html>
+            `);
 }
 
 function receiveROI(coords) {
@@ -204,6 +225,126 @@ async function sendParams() {
 }
 
 
+
+
+async function selectPoints(x1, y1, x2, y2) {
+    try {
+        const response = await fetch("http://192.168.1.121:8000/compute_1d", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ x1, y1, x2, y2 })
+        });
+        const data = await response.json();
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert("line selected");
+        }
+    } catch (error) {
+        console.error("Error selecting line:", error);
+        alert("Error selecting line: " + error.message);
+    }
+}
+
+
+function startPointsSelection() {
+    if (!image.psi) {
+        alert("No phase difference image available.");
+        return;
+    }
+
+    const popup = window.open('', 'ImagePopup', 'width=800,height=600');
+    if (!popup) {
+        alert("Popup blocked");
+        return;
+    }
+
+    popup.document.write(`
+        <html>
+        <head>
+        <title>Select Line</title>
+        <style>
+            body { margin: 0; }
+            canvas { display: block; cursor: crosshair; }
+        </style>
+        </head>
+        <body>
+        <canvas id="canvas"></canvas>
+        <script>
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.src = "data:image/png;base64,${image.psi}";
+
+            let clickCount = 0;
+            let point1 = null;
+            let point2 = null;
+
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+            };
+
+            canvas.addEventListener('click', e => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                clickCount++;
+
+                if (clickCount === 1) {
+                    point1 = { x: Math.round(x), y: Math.round(y) };
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    ctx.beginPath();
+                    ctx.arc(point1.x, point1.y, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = 'red';
+                    ctx.fill();
+                } else if (clickCount === 2) {
+                    point2 = { x: Math.round(x), y: Math.round(y) };
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    ctx.beginPath();
+                    ctx.moveTo(point1.x, point1.y);
+                    ctx.lineTo(point2.x, point2.y);
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    window.opener.receivePoints({ 
+                        x1: point1.x, y1: point1.y, x2: point2.x, y2: point2.y 
+                    });
+                    setTimeout(() => window.close(), 300);
+                } else {
+                    clickCount = 1;
+                    point1 = { x: Math.round(x), y: Math.round(y) };
+                    point2 = null;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    ctx.beginPath();
+                    ctx.arc(point1.x, point1.y, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = 'red';
+                    ctx.fill();
+                }
+            });
+        <\/script>
+        </body>
+        </html>
+    `);
+}
+
+
+
+// Global variables to receive points from popup
+
+function receivePoints(coords) {
+    console.log("Selected Points (raw):", coords);
+    selectPoints(coords.x1, coords.y1, coords.x2, coords.y2);
+}
+
+
+
 async function fetch3DPlot() {
     try {
         const response = await fetch("http://192.168.1.121:8000/compute_3d");
@@ -232,160 +373,6 @@ async function fetch3DPlot() {
     } catch (error) {
         console.error("Error:", error);
         alert("Error: " + error.message);
-    }
-}
-
-
-
-async function fetch1DPlot() {
-    try {
-        const response = await fetch("http://192.168.1.121:8000/compute_1d");
-        const data = await response.json();
-        if (data.error) {
-            alert(data.error);
-            return;
-        }
-        const output1D = document.getElementById("output1D");
-        output1D.innerHTML = `<span>1D</span><div id="plot1d" style="height:400px;"></div>`;
-
-        Plotly.newPlot('plot1d', [{
-            type: 'scatter',
-            mode: 'lines+markers',   // or just 'lines' or 'markers' if you prefer
-            x: data.distances,
-            y: data.thickness_values,
-            line: { color: 'blue' },
-            marker: { size: 6 }
-        }], {
-            xaxis: { title: 'Distance (μm)' },
-            yaxis: { title: 'Thickness (μm)' },
-            margin: { l: 50, r: 20, b: 50, t: 20 }
-        });
-
-        
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Error: " + error.message);
-    }
-}
-
-
-
-
-function selectPoints(psi) {
-    if (!psi) {
-        alert("No phase image available. Please run phase difference first.");
-        return;
-    }
-
-    const popup = window.open('', 'ImagePopup', 'width=800,height=600');
-    popup.document.write(`
-    <html>
-    <head>
-      <title>Select Points</title>
-      <style>
-        body { margin: 0; }
-        canvas { display: block; cursor: crosshair; }
-        #pixel-tooltip {
-          position: fixed;
-          background: rgba(0,0,0,0.7);
-          color: white;
-          padding: 4px 8px;
-          font-family: monospace;
-          font-size: 12px;
-          border-radius: 4px;
-          pointer-events: none;
-          z-index: 1000;
-        }
-      </style>
-    </head>
-    <body>
-      <canvas id="canvas"></canvas>
-      <div id="pixel-tooltip"></div>
-      <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.src = "data:image/png;base64,${psi}";
-
-        let points = [];
-
-        img.onload = function() {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-        };
-
-        canvas.addEventListener('click', function(event) {
-          const rect = canvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          points.push({ x, y });
-
-          ctx.beginPath();
-          ctx.arc(x, y, 5, 0, 2 * Math.PI);
-          ctx.fillStyle = 'red';
-          ctx.fill();
-
-          if (points.length === 2) {
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            ctx.lineTo(points[1].x, points[1].y);
-            ctx.strokeStyle = 'blue';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            window.opener.receivePoints(points[0], points[1]);
-            setTimeout(() => window.close(), 1000);
-          }
-        });
-
-        canvas.addEventListener('mousemove', function(event) {
-          const rect = canvas.getBoundingClientRect();
-          const x = Math.floor(event.clientX - rect.left);
-          const y = Math.floor(event.clientY - rect.top);
-          if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
-            const pixel = ctx.getImageData(x, y, 1, 1).data;
-            const [r, g, b, a] = pixel;
-            const tooltip = document.getElementById('pixel-tooltip');
-            tooltip.textContent = \`(\${x}, \${y}): R=\${r} G=\${g} B=\${b} A=\${a}\`;
-            tooltip.style.left = \`\${event.clientX + 10}px\`;
-            tooltip.style.top = \`\${event.clientY + 10}px\`;
-          }
-        });
-
-        canvas.addEventListener('mouseleave', () => {
-          const tooltip = document.getElementById('pixel-tooltip');
-          tooltip.textContent = '';
-        });
-      <\/script>
-    </body>
-    </html>
-  `);
-}
-
-
-function receivePoints(p1, p2) {
-    point1 = p1;
-    point2 = p2;
-    console.log('Selected points:', point1, point2);
-}
-
-async function selectROI(x1, y1, x2, y2) {
-    try {
-        const response = await fetch("http://192.168.1.121:8000/select_roi", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ x1, y1, x2, y2 })
-        });
-        const data = await response.json();
-        if (data.error) {
-            alert(data.error);
-        } else {
-            alert("ROI selected and noise reduced!");
-        }
-    } catch (error) {
-        console.error("Error selecting ROI:", error);
-        alert("Error selecting ROI: " + error.message);
     }
 }
 

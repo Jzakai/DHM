@@ -97,20 +97,6 @@ async def run_phase_difference_endpoint(
     }
 
 
-@app.post("/select_roi")
-async def select_roi_endpoint(coords: dict):
-    global roi_phase, roi_coords
-    phase = get_phase_difference()
-    print(phase)
-    if phase is None:
-        return {"error": "No phase difference computed yet."}
-
-    x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
-    roi = phase[y1:y2, x1:x2]
-    roi_phase, _, _ = reduce_noise(roi)
-    roi_coords = (x1, y1, x2, y2)
-
-    return {"status": "ROI selected and noise reduced", "shape": roi_phase.shape}
 
 @app.get("/compute_3d")
 async def compute_3d_endpoint():
@@ -128,69 +114,59 @@ async def compute_3d_endpoint():
     }
 
 
-class Points(BaseModel):
-    x1: int
-    y1: int
-    x2: int
-    y2: int
+
+
+
+# @app.post("/compute_1d")
+# async def compute_1d_endpoint(
+#     x1: int = Form(...),
+#     y1: int = Form(...),
+#     x2: int = Form(...),
+#     y2: int = Form(...),
+# ):
+#     phase_result = roi_phase if roi_phase is not None else get_phase_difference()
+
+#     points_dict = {
+#         "x1": x1,
+#         "y1": y1,
+#         "x2": x2,
+#         "y2": y2
+#     }
+
+#     if phase_result is None:
+#         return {"error": "No phase difference computed yet."}
+
+#     distances, thickness_values = compute_1d_thickness(x1, y1, x2, y2, phase_result)
+
+#     return {
+#         "distances": distances.tolist(), 
+#         "thickness_values": thickness_values.tolist()
+#     }
+
 
 @app.post("/compute_1d")
-async def compute_1d_endpoint(points: Points):
-    x1, y1, x2, y2 = points.x1, points.y1, points.x2, points.y2
-    phase_result = roi_phase if roi_phase is not None else get_phase_difference()
-
-    points_dict = {
-        "x1": x1,
-        "y1": y1,
-        "x2": x2,
-        "y2": y2
-    }
-
-    get_points(points_dict)
-    if phase_result is None:
+async def compute_1d_endpoint(coords: dict):
+    phase = get_phase_difference()
+    print(phase)
+    if phase is None:
         return {"error": "No phase difference computed yet."}
 
-    distances, thickness_values = compute_1d_thickness(x1, y1, x2, y2, phase_result)
-
-    return {
-        "distances": distances.tolist(), 
-        "thickness_values": thickness_values.tolist()
-    }
+    x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
+    thinkness, distance=  compute_1d_thickness(x1, y1, x2, y2, phase)
+    return {"thinkness": thinkness, "distance": distance}
 
 
-class Points(BaseModel):
-    x1: int
-    y1: int
-    x2: int
-    y2: int
-
-@app.post("/compute_1d")
-async def compute_1d_endpoint(points: Points):
-    x1, y1, x2, y2 = points.x1, points.y1, points.x2, points.y2
-    phase_result = roi_phase if roi_phase is not None else get_phase_difference()
-
-    points_dict = {
-        "x1": x1,
-        "y1": y1,
-        "x2": x2,
-        "y2": y2
-    }
-
-    get_points(points_dict)
-    if phase_result is None:
+@app.post("/select_roi")
+async def select_roi_endpoint(coords: dict):
+    global roi_phase, roi_coords
+    phase = get_phase_difference()
+    print(phase)
+    if phase is None:
         return {"error": "No phase difference computed yet."}
 
-    distances, thickness_values = compute_1d_thickness(x1, y1, x2, y2, phase_result)
+    x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
+    roi = phase[y1:y2, x1:x2]
+    roi_phase, _, _ = reduce_noise(roi)
+    roi_coords = (x1, y1, x2, y2)
 
-    return {
-        "distances": distances.tolist(), 
-        "thickness_values": thickness_values.tolist()
-    }
-
-
-
-# Calculate absolute path to frontend folder
-frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
-app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
-
-
+    return {"status": "ROI selected and noise reduced", "shape": roi_phase.shape}
