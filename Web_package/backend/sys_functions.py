@@ -274,7 +274,6 @@ def compute_3d_thickness(imageArray):
 
 
 def compute_1d_thickness(x1, y1, x2, y2, imageArray):
-
     thickness_1d = compute_2d_thickness(imageArray)
     thickness_1d = thickness_1d - thickness_1d.min()
 

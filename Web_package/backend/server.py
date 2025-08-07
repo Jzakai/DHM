@@ -19,7 +19,7 @@ import base64
 
 import plotly.graph_objs as go
 import plotly.io as pio
-from sys_functions import (compute_3d_thickness, get_phase_difference, reduce_noise)
+from sys_functions import (compute_3d_thickness, get_phase_difference, reduce_noise, compute_1d_thickness)
 
 
 app = FastAPI()
@@ -126,6 +126,23 @@ async def compute_3d_endpoint():
         "z": Z.tolist()
     }
 
+
+
+
+@app.post("/compute_1d")
+async def compute_1d(data: dict):
+    try:
+        phase_result = roi_phase if roi_phase is not None else get_phase_difference()
+        print(phase_result)
+        
+        x1, y1, x2, y2 = data["x1"], data["y1"], data["x2"], data["y2"]
+        x_vals, thickness_vals = compute_1d_thickness(x1, y1, x2, y2, phase_result)
+        return {
+            "x": x_vals.tolist(),
+            "y": thickness_vals.tolist()
+        }
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 # Calculate absolute path to frontend folder

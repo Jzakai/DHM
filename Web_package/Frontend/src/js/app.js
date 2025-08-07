@@ -203,7 +203,7 @@ async function sendParams() {
     }
 }
 
-
+//recieves information returned from backend after 3d computation
 async function fetch3DPlot() {
     try {
         const response = await fetch("http://192.168.1.121:8000/compute_3d");
@@ -236,51 +236,7 @@ async function fetch3DPlot() {
 }
 
 
-
-async function fetch1DPlot() {
-    psi = image.psi
-    selectPoints(psi)
-    point1 = point1;
-    point2 = p2;
-
-
-    console.log('Selected points:', point1, point2);
-    const x1 = Math.round(p1.x);
-    const y1 = Math.round(p1.y);
-    const x2 = Math.round(p2.x);
-    const y2 = Math.round(p2.y);
-
-
-    try {
-        const response = await fetch("http://192.168.1.121:8000/compute_1d", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                x1,
-                y1,
-                x2,
-                y2
-            })
-        });
-        const data = await response.json();
-        if (data.error) {
-            alert(data.error);
-            return;
-        }
-        const output1D = document.getElementById("output1D");
-        output1D.innerHTML = `<span>3D</span><div id="plot1d" style="height:400px;"></div>`;
-
-
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Error: " + error.message);
-    }
-
-
-}
-
+//1d profile
 
 function selectPoints(psi) {
     if (!psi) {
@@ -379,7 +335,58 @@ function receivePoints(p1, p2) {
     point1 = p1;
     point2 = p2;
     console.log('Selected points:', point1, point2);
+    fetch1DPlot();  // Call after user selects points
 }
+
+async function fetch1DPlot() {
+    if (!point1 || !point2) {
+        alert("Please select two points on the image.");
+        return;
+    }
+
+    const x1 = Math.round(point1.x);
+    const y1 = Math.round(point1.y);
+    const x2 = Math.round(point2.x);
+    const y2 = Math.round(point2.y);
+
+    try {
+        const response = await fetch("http://192.168.1.121:8000/compute_1d", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ x1, y1, x2, y2 })
+        });
+
+        // recieve thickness and distance to plot
+        const data = await response.json();
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        // Plot using Plotly
+        const output1D = document.getElementById("output1D");
+        output1D.innerHTML = `<span>1D</span><div id="plot1d" style="height:400px;"></div>`;
+
+        Plotly.newPlot("plot1d", [{
+            x: data.x,
+            y: data.y,
+            mode: 'lines',
+            type: 'scatter',
+            line: { color: 'blue' }
+        }], {
+            xaxis: { title: "Distance (μm)" },
+            yaxis: { title: "Thickness (μm)" },
+            margin: { l: 40, r: 10, b: 40, t: 10 }
+        });
+
+    } catch (error) {
+        console.error("1D Error:", error);
+        alert("Failed to generate 1D plot");
+    }
+}
+
 
 async function selectROI(x1, y1, x2, y2) {
     try {
