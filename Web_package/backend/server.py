@@ -76,7 +76,7 @@ async def run_phase_difference_endpoint(
         "threshold_strength": threshold_strength,
     }
 
-
+    get_params(params_dict)
     # Run computation (numeric phase result)
     phase_result = run_phase_difference(image_np, reference_np)
 
