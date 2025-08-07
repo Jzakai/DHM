@@ -7,65 +7,79 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="css/styles.css" />
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
- 
+
 
 </head>
 
 <body>
 
+
+  <div class="top-toggle-buttons">
+    <button id="toggleCamera">Camera</button>
+    <button id="toggleComputation">Computations and Output</button>
+  </div>
+
+
+
+  <div id="slideDiv">
+    <button id="toggleBtn">Parameters</button>
+
+    <!-- Microscope Parameters -->
+    <div class="section" id="params">
+      <h2>Microscope Parameters</h2>
+      <div class="row">
+        <div class="field">
+          <label for="wavelength">Wavelength (µm)</label>
+          <input id="wavelength" type="number" value="0.650" step="0.001" />
+        </div>
+        <div class="field">
+          <label for="magnification">Magnification</label>
+          <input id="magnification" type="number" value="10" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="pixelSize">Camera Pixel Size (µm)</label>
+          <input id="pixelSize" type="number" value="1.0" step="0.1" />
+        </div>
+        <div class="field">
+          <label for="ri">RI Difference</label>
+          <input id="ri" type="number" value="1" step="0.1" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="filterType">Filter Type</label>
+          <select id="filterType">
+            <option>circle</option>
+            <option>square</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filterSize">Filter Size (pixels)</label>
+          <input id="filterSize" type="number" value="101" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="beams">Number of beams</label>
+          <select id="beams">
+            <option>1 Beam</option>
+            <option>2 Beams</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="skipPixels">Pixels not used in scanning</label>
+          <input id="skipPixels" type="number" value="20" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <div class="container">
     <!-- Left panel -->
     <div class="left">
-      <!-- Microscope Parameters -->
-      <div class="section" id="params">
-        <h2>Microscope Parameters</h2>
-        <div class="row">
-          <div class="field">
-            <label for="wavelength">Wavelength (µm)</label>
-            <input id="wavelength" type="number" value="0.650" step="0.001" />
-          </div>
-          <div class="field">
-            <label for="magnification">Magnification</label>
-            <input id="magnification" type="number" value="10" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="pixelSize">Camera Pixel Size (µm)</label>
-            <input id="pixelSize" type="number" value="1.0" step="0.1" />
-          </div>
-          <div class="field">
-            <label for="ri">RI Difference</label>
-            <input id="ri" type="number" value="1" step="0.1" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="filterType">Filter Type</label>
-            <select id="filterType">
-              <option>circle</option>
-              <option>square</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="filterSize">Filter Size (pixels)</label>
-            <input id="filterSize" type="number" value="101" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="beams">Number of beams</label>
-            <select id="beams">
-              <option>1 Beam</option>
-              <option>2 Beams</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="skipPixels">Pixels not used in scanning</label>
-            <input id="skipPixels" type="number" value="20" />
-          </div>
-        </div>
-      </div>
 
       <div class="section" id="images">
         <h2>Images</h2>
@@ -79,43 +93,66 @@
 
 
 
-      <!-- Phase computation -->
-      <div class="section" id="phase">
-        <h2>Phase computation</h2>
-        <div class="btn-group">
-          <button id="checkSpectrum" class="sm">Check Spectrum</button>
-          <button id="phaseDiff" type="button">Phase Difference</button>
+
+      <div class="camera-output" id="cameraOutput">
+
+        <h4>Captured Output</h4>
+        <div class="output-images" id="outputImages">
+
+          <div class="output-group">
+            <div class="output-box" id="spectrumOutput">
+              <span>Spectrum</span>
+            </div>
+            <button id="checkSpectrum" class="sm">Check Spectrum</button>
+          </div>
+
+          <div class="output-group">
+            <div class="output-box" id="phaseOutput">
+              <span>Phase Difference</span>
+              <div style="position:relative; display:inline-block;">
+                <img id="phaseImage" style="max-width:100%; border:1px solid #ccc;">
+                <canvas id="roiCanvas" style="position:absolute; left:0; top:0;"></canvas>
+              </div>
+            </div>
+            <button id="phaseDiff" type="button">Phase Difference</button>
+          </div>
+
+          <div class="output-group">
+            <div class="output-box" id="roiOutput">
+              <span>Region of Interest</span>
+            </div>
+            <button id="selectRoiBtn" type="button">Select ROI</button>
+          </div>
+
+          <div class="output-group">
+            <div class="output-box" id="output2D">
+              <span>2D</span>
+            </div>
+            <button class="sm" id="2dbtn">2D profile</button>
+          </div>
+
+          <div class="output-group">
+            <div class="output-box" id="output3D">
+              <span>3D</span>
+            </div>
+            <button class="sm" id="3dbtn">3D profile</button>
+          </div>
+
+          <div class="output-group">
+            <div class="output-box" id="output1D">
+              <span>1D</span>
+            </div>
+            <button class="sm" id="1dbtn">1D profile</button>
+          </div>
 
         </div>
+
       </div>
 
-      <!-- Region of Interest -->
-      <div class="section" id="roi">
-        <h2>Region of Interest</h2>
-        <button id="selectRoiBtn" type="button">Select ROI</button>
-      </div>
 
-      
-
-      <!-- Thickness Distributions -->
-      <div class="section" id="thickness">
-        <h2>Thickness Distributions</h2>
-        <div class="btn-group">
-          <button class="sm" id="2dbtn">2D profile</button>
-          <button class="sm" id="3dbtn">3D profile</button>
-          <button class="sm" id="1dbtn">1D profile</button>
-        </div>
-      </div>
-
-      <!-- Other -->
-      <div class="section" id="other">
-        <h2>Other</h2>
-        <button id="runAll">Run All</button>
-      </div>
     </div>
-
     <!-- Right panel: Camera + directional pad -->
-    <div class="placeholder">
+    <div class="right">
       <div class="camera-box">
         <div class="camera-header">Camera</div>
         <video id="video" autoplay playsinline></video>
@@ -127,56 +164,43 @@
         <div class="small-text">Camera feed from local webcam (falls back to placeholder if denied).</div>
 
         <!-- Directional pad -->
-        <div class="directional-container">
-          <div class="dial">
-            <!-- Quadrants -->
-            <div class="quad up" data-dir="+Y">
-              <div class="label">+Y</div>
+        <div class="camStuff">
+          <div class="directional-container">
+            <div class="dial">
+              <!-- Quadrants -->
+              <div class="quad up" data-dir="+Y">
+                <div class="label">+Y</div>
+              </div>
+              <div class="quad right" data-dir="+X">
+                <div class="label">+X</div>
+              </div>
+              <div class="quad down" data-dir="-Y">
+                <div class="label">-Y</div>
+              </div>
+              <div class="quad left" data-dir="-X">
+                <div class="label">-X</div>
+              </div>
+              <!-- Center home -->
+              <div class="center" data-dir="home" title="Home">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z" />
+                </svg>
+              </div>
             </div>
-            <div class="quad right" data-dir="+X">
-              <div class="label">+X</div>
-            </div>
-            <div class="quad down" data-dir="-Y">
-              <div class="label">-Y</div>
-            </div>
-            <div class="quad left" data-dir="-X">
-              <div class="label">-X</div>
-            </div>
-            <!-- Center home -->
-            <div class="center" data-dir="home" title="Home">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z" />
-              </svg>
-            </div>
+            <div class="pad-status" id="pad-status">Ready</div>
           </div>
-          <div class="pad-status" id="pad-status">Ready</div>
+
+
+          <div id="foucsingBtns">
+            <button id="focus">^</button>
+            <button id="unfocus">v</button>
+          </div>
         </div>
-       <div class="camera-output" id="cameraOutput">
-
-  <h4>Captured Output</h4>
-  <div class="output-images" id="outputImages">
-    <div class="output-box" id="spectrumOutput"><span>Spectrum</span></div>
-    <div class="output-box" id="phaseOutput"><span>Phase Difference</span>
-      <div style="position:relative; display:inline-block;">
-      <img id="phaseImage" style="max-width:100%; border:1px solid #ccc;">
-      <canvas id="roiCanvas" style="position:absolute; left:0; top:0;"></canvas>
-  </div>
-    </div>
-    <div class="output-box" id="roiOutput" ><span>Region of Interest</span></div>
-    <div class="output-box" id="output2D"><span>2D</span></div>
-    <div class="output-box" id="output3D"><span>3D</span></div>
-    <div class="output-box" id="output1D"><span>1D</span></div>
-  </div>
-</div>
-
-
       </div>
-    </div>
-  </div>
 
-  <script src="js/app.js"></script>
-  <script src="js/imagesSaver.js"></script>
+      <script src="js/app.js"></script>
+      <script src="js/imagesSaver.js"></script>
 
 </body>
 

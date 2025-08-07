@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const ctx = roiCanvas.getContext("2d");
     const phaseImage = document.getElementById("phaseImage");
 
+
     document.getElementById("openCam").addEventListener("click", async () => {
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
@@ -65,6 +66,8 @@ async function selectROI(x1, y1, x2, y2) {
             alert(data.error);
         } else {
             alert("ROI selected and noise reduced!");
+
+
         }
     } catch (error) {
         console.error("Error selecting ROI:", error);
@@ -206,12 +209,48 @@ async function sendParams() {
 
         // Inject the phase difference image into #phaseOutput
         const phaseOutputBox = document.getElementById("phaseOutput");
-        phaseOutputBox.innerHTML = `
-            <span>Phase Difference</span>
-            <img src="data:image/png;base64,${data.phase_image}" 
-                 alt="Phase Difference" 
-                 style="max-width:100%; display:block; margin-top:8px; border:1px solid #ccc;">
-        `;
+        phaseOutputBox.innerHTML = `<div id="plotImage" style="width:100%; height:100%;"></div>`;
+
+        Plotly.newPlot('plotImage', [], {
+            images: [{
+                source: "data:image/png;base64," + data.phase_image,
+                x: 0,
+                y: 0,
+                sizex: 1,
+                sizey: 1,
+                xref: "x",
+                yref: "y",
+                sizing: "stretch",
+                layer: "below"
+            }],
+            xaxis: {
+                showgrid: false,
+                zeroline: false,
+                visible: false,
+                constrain: "domain",
+                range: [0, 1],
+                autorange: false,
+                fixedrange: false
+            },
+            yaxis: {
+                showgrid: false,
+                zeroline: false,
+                visible: false,
+                scaleanchor: "x",
+                range: [1, 0], // flipped axis
+                autorange: false,
+                fixedrange: false
+            },
+            margin: { l: 0, r: 0, t: 0, b: 0 }
+        }, {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: [],
+            modeBarButtonsToAdd: [],
+            scrollZoom: true
+        });
+
 
         // Optional: log details
         console.log("Phase shape:", data.shape);
@@ -235,7 +274,7 @@ async function fetch3DPlot() {
             return;
         }
         const output3D = document.getElementById("output3D");
-        output3D.innerHTML = `<span>3D</span><div id="plot3d" style="height:400px;"></div>`;
+        output3D.innerHTML = `<div id="plot3d" style="width:100%; height:100%;"></div>`;
 
         Plotly.newPlot('plot3d', [{
             type: 'surface',
@@ -258,6 +297,7 @@ async function fetch3DPlot() {
 }
 
 
+<<<<<<< Updated upstream
 //1d profile
 
 function startPointsSelection() {
@@ -452,6 +492,16 @@ async function selectROI(x1, y1, x2, y2) {
     }
 }
 
+=======
+const toggleBtn = document.getElementById('toggleBtn');
+const slideDiv = document.getElementById('slideDiv');
+
+toggleBtn.addEventListener('click', () => {
+    slideDiv.classList.toggle('active');
+});
+
+
+>>>>>>> Stashed changes
 
 document.getElementById('mainGallery').addEventListener('click', () => {
     const details = document.getElementById('outputImages');
@@ -460,4 +510,11 @@ document.getElementById('mainGallery').addEventListener('click', () => {
     } else {
         details.style.display = 'flex';
     }
+});
+
+
+const rightPanel = document.querySelector('.right');
+
+toggleCamera.addEventListener('click', () => {
+    rightPanel.style.display = 'flex';
 });

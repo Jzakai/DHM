@@ -1,0 +1,63 @@
+<!-- Microscope Parameters -->
+      <div class="section" id="params">
+        <h2>Microscope Parameters</h2>
+        <div class="row">
+          <div class="field">
+            <label for="wavelength">Wavelength (µm)</label>
+            <input id="wavelength" type="number" value="0.650" step="0.001" />
+          </div>
+          <div class="field">
+            <label for="magnification">Magnification</label>
+            <input id="magnification" type="number" value="10" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="pixelSize">Camera Pixel Size (µm)</label>
+            <input id="pixelSize" type="number" value="1.0" step="0.1" />
+          </div>
+          <div class="field">
+            <label for="ri">RI Difference</label>
+            <input id="ri" type="number" value="1" step="0.1" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="filterType">Filter Type</label>
+            <select id="filterType">
+              <option>circle</option>
+              <option>square</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filterSize">Filter Size (pixels)</label>
+            <input id="filterSize" type="number" value="101" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="beams">Number of beams</label>
+            <select id="beams">
+              <option>1 Beam</option>
+              <option>2 Beams</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="skipPixels">Pixels not used in scanning</label>
+            <input id="skipPixels" type="number" value="20" />
+          </div>
+        </div>
+      </div>
+
+
+<!-- Images -->
+
+      <div class="section" id="images">
+        <h2>Images</h2>
+        <div class="row">
+          <label>Object Image:</label>
+          <input type="file" id="imageFile" accept="image/*"><br>
+          <label>Reference Image:</label>
+          <input type="file" id="refFile" accept="image/*">
+        </div>
+      </div>
