@@ -1,5 +1,6 @@
 let image = {
-    psi: null
+    psi: null,
+    roi: null
 };
 
 
@@ -260,11 +261,11 @@ async function fetch3DPlot() {
 //1d profile
 
 function startPointsSelection() {
-    if (!image.psi) {
+    if (!image.roi) {
         alert("Please compute the phase difference first.");
         return;
     }
-    selectPoints(image.psi);
+    selectPoints(image.roi);
 }
 
 function selectPoints(psi) {
@@ -428,6 +429,15 @@ async function selectROI(x1, y1, x2, y2) {
         if (data.error) {
             alert(data.error);
         } else {
+            // Store the ROI image for display or selection
+            image.roi = data.roi_image;
+
+            // Optional: display the ROI image
+            document.getElementById("outputROI").innerHTML = `
+              <span>ROI</span>
+              <img src="data:image/png;base64,${data.roi_image}" style="max-width:100%; border:1px solid #ccc;">
+            `;
+
             alert("ROI selected and noise reduced!");
         }
     } catch (error) {
@@ -435,7 +445,6 @@ async function selectROI(x1, y1, x2, y2) {
         alert("Error selecting ROI: " + error.message);
     }
 }
-
 
 
 document.getElementById('mainGallery').addEventListener('click', () => {

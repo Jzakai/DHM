@@ -137,7 +137,6 @@ async def compute_1d(data: dict):
 async def select_roi_endpoint(coords: dict):
     global roi_phase, roi_coords
     phase = get_phase_difference()
-    print(phase)
     if phase is None:
         return {"error": "No phase difference computed yet."}
 
@@ -146,7 +145,22 @@ async def select_roi_endpoint(coords: dict):
     roi_phase, _, _ = reduce_noise(roi)
     roi_coords = (x1, y1, x2, y2)
 
-    return {"status": "ROI selected and noise reduced", "shape": roi_phase.shape}
+    # Normalize and convert to 8-bit image
+    norm_roi = (roi_phase - np.min(roi_phase)) / (np.max(roi_phase) - np.min(roi_phase) + 1e-8)
+    roi_uint8 = (norm_roi * 255).astype(np.uint8)
+
+    # Convert to base64-encoded PNG
+    img = Image.fromarray(roi_uint8)
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    encoded_roi_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+    return {
+        "status": "ROI selected and noise reduced",
+        "shape": roi_phase.shape,
+        "roi_image": encoded_roi_image
+    }
+
 
 # Calculate absolute path to frontend folder
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
