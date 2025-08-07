@@ -44,15 +44,36 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("3dbtn").addEventListener("click", fetch3DPlot);
     document.getElementById("runAll").addEventListener("click", () => alert("Run All sequence started"));
     document.getElementById("2dbtn").addEventListener("click", () => alert("2dbtn clicked"));
-    document.getElementById("1dbtn").addEventListener("click", fetch1DPlot);
+    document.getElementById("1dbtn").addEventListener("click", startPointsSelection);
     document.getElementById('mainGallery').addEventListener('click', () => {
         const details = document.getElementById('outputImages');
         details.style.display = (details.style.display === 'flex') ? 'none' : 'flex';
     });
 
-  });
-  
-    function startROISelection() {
+});
+
+async function selectROI(x1, y1, x2, y2) {
+    try {
+        const response = await fetch("http://192.168.1.121:8000/select_roi", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ x1, y1, x2, y2 })
+        });
+        const data = await response.json();
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert("ROI selected and noise reduced!");
+        }
+    } catch (error) {
+        console.error("Error selecting ROI:", error);
+        alert("Error selecting ROI: " + error.message);
+    }
+}
+
+
+
+function startROISelection() {
     if (!image.psi) {
         alert("No phase difference image available.");
         return;
@@ -60,66 +81,66 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const popup = window.open('', 'ImagePopup', 'width=800,height=600');
     popup.document.write(`
-    <html>
-    <head>
-      <title>Select ROI</title>
-      <style>
-        body { margin: 0; }
-        canvas { display: block; cursor: crosshair; }
-      </style>
-    </head>
-    <body>
-      <canvas id="canvas"></canvas>
-      <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.src = "data:image/png;base64,${image.psi}";
-        
-        let startX, startY, endX, endY, drawing = false;
+            <html>
+            <head>
+            <title>Select ROI</title>
+            <style>
+                body { margin: 0; }
+                canvas { display: block; cursor: crosshair; }
+            </style>
+            </head>
+            <body>
+            <canvas id="canvas"></canvas>
+            <script>
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.src = "data:image/png;base64,${image.psi}";
+                
+                let startX, startY, endX, endY, drawing = false;
 
-        img.onload = function() {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-        };
+                img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                };
 
-        canvas.addEventListener('mousedown', e => {
-          const rect = canvas.getBoundingClientRect();
-          startX = e.clientX - rect.left;
-          startY = e.clientY - rect.top;
-          drawing = true;
-        });
+                canvas.addEventListener('mousedown', e => {
+                const rect = canvas.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+                drawing = true;
+                });
 
-        canvas.addEventListener('mousemove', e => {
-          if (!drawing) return;
-          const rect = canvas.getBoundingClientRect();
-          endX = e.clientX - rect.left;
-          endY = e.clientY - rect.top;
-          ctx.drawImage(img, 0, 0);
-          ctx.strokeStyle = 'red';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(startX, startY, endX - startX, endY - startY);
-        });
+                canvas.addEventListener('mousemove', e => {
+                if (!drawing) return;
+                const rect = canvas.getBoundingClientRect();
+                endX = e.clientX - rect.left;
+                endY = e.clientY - rect.top;
+                ctx.drawImage(img, 0, 0);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+                });
 
-        canvas.addEventListener('mouseup', e => {
-          drawing = false;
-          const rect = canvas.getBoundingClientRect();
-          endX = e.clientX - rect.left;
-          endY = e.clientY - rect.top;
-          const coords = {
-            x1: Math.round(Math.min(startX, endX)),
-            y1: Math.round(Math.min(startY, endY)),
-            x2: Math.round(Math.max(startX, endX)),
-            y2: Math.round(Math.max(startY, endY))
-          };
-          window.opener.receiveROI(coords);
-          setTimeout(() => window.close(), 500);
-        });
-      <\/script>
-    </body>
-    </html>
-    `);
+                canvas.addEventListener('mouseup', e => {
+                drawing = false;
+                const rect = canvas.getBoundingClientRect();
+                endX = e.clientX - rect.left;
+                endY = e.clientY - rect.top;
+                const coords = {
+                    x1: Math.round(Math.min(startX, endX)),
+                    y1: Math.round(Math.min(startY, endY)),
+                    x2: Math.round(Math.max(startX, endX)),
+                    y2: Math.round(Math.max(startY, endY))
+                };
+                window.opener.receiveROI(coords);
+                setTimeout(() => window.close(), 500);
+                });
+            <\/script>
+            </body>
+            </html>
+            `);
 }
 
 function receiveROI(coords) {

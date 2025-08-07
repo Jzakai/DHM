@@ -10,12 +10,13 @@ from fastapi.responses import JSONResponse
 import numpy as np
 from PIL import Image
 import io
-from sys_functions import get_params, run_phase_difference
+from sys_functions import get_params, get_points, run_phase_difference
 from fastapi.staticfiles import StaticFiles
 import os
 
 import cv2
 import base64
+from pydantic import BaseModel
 
 import plotly.graph_objs as go
 import plotly.io as pio
@@ -74,7 +75,7 @@ async def run_phase_difference_endpoint(
         "beam_type": beam_type,
         "threshold_strength": threshold_strength,
     }
-    get_params(params_dict)
+
 
     # Run computation (numeric phase result)
     phase_result = run_phase_difference(image_np, reference_np)
@@ -96,20 +97,6 @@ async def run_phase_difference_endpoint(
     }
 
 
-@app.post("/select_roi")
-async def select_roi_endpoint(coords: dict):
-    global roi_phase, roi_coords
-    phase = get_phase_difference()
-    print(phase)
-    if phase is None:
-        return {"error": "No phase difference computed yet."}
-
-    x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
-    roi = phase[y1:y2, x1:x2]
-    roi_phase, _, _ = reduce_noise(roi)
-    roi_coords = (x1, y1, x2, y2)
-
-    return {"status": "ROI selected and noise reduced", "shape": roi_phase.shape}
 
 @app.get("/compute_3d")
 async def compute_3d_endpoint():
