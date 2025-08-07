@@ -433,7 +433,7 @@ async function selectROI(x1, y1, x2, y2) {
             image.roi = data.roi_image;
 
             // Optional: display the ROI image
-            document.getElementById("outputROI").innerHTML = `
+            document.getElementById("roiOutput").innerHTML = `
               <span>ROI</span>
               <img src="data:image/png;base64,${data.roi_image}" style="max-width:100%; border:1px solid #ccc;">
             `;
