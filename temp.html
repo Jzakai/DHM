@@ -1,63 +1,231 @@
-<!-- Microscope Parameters -->
-      <div class="section" id="params">
-        <h2>Microscope Parameters</h2>
-        <div class="row">
-          <div class="field">
-            <label for="wavelength">Wavelength (µm)</label>
-            <input id="wavelength" type="number" value="0.650" step="0.001" />
-          </div>
-          <div class="field">
-            <label for="magnification">Magnification</label>
-            <input id="magnification" type="number" value="10" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="pixelSize">Camera Pixel Size (µm)</label>
-            <input id="pixelSize" type="number" value="1.0" step="0.1" />
-          </div>
-          <div class="field">
-            <label for="ri">RI Difference</label>
-            <input id="ri" type="number" value="1" step="0.1" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="filterType">Filter Type</label>
-            <select id="filterType">
-              <option>circle</option>
-              <option>square</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="filterSize">Filter Size (pixels)</label>
-            <input id="filterSize" type="number" value="101" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="beams">Number of beams</label>
-            <select id="beams">
-              <option>1 Beam</option>
-              <option>2 Beams</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="skipPixels">Pixels not used in scanning</label>
-            <input id="skipPixels" type="number" value="20" />
-          </div>
-        </div>
-      </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microscope Control Panel</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        display: flex;
+        height: 100vh;
+        background: #f8f8f8;
+    }
+    .container {
+        display: flex;
+        flex: 1;
+    }
+    /* Left Panel */
+    .left-panel {
+        flex: 1;
+        max-width: 400px;
+        background: #fff;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        border-right: 2px solid #ccc;
+    }
+    .section {
+        background: #f0f0f0;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .section h3 {
+        margin: 0 0 10px;
+        font-size: 1.1em;
+    }
+    .btn-popup {
+        display: inline-block;
+        padding: 8px;
+        margin: 5px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .btn-popup:hover {
+        background: #45a049;
+    }
+    .upload {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .upload input[type="file"] {
+        flex: 1;
+    }
+    .outputs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+    }
+    .output-box {
+        background: white;
+        border: 1px solid #ccc;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
+    /* Right Panel */
+    .right-panel {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+    }
+    .live-feed {
+        flex: 1;
+        background: #ddd;
+        border: 1px solid #aaa;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+    .thumbnails {
+        display: flex;
+        gap: 5px;
+        padding: 5px;
+        background: #ccc;
+    }
+    .thumbnail {
+        flex: 1;
+        height: 40px;
+        background: white;
+        border: 1px solid #999;
+    }
+    .video-area {
+        flex: 1;
+        background: repeating-linear-gradient(
+            45deg,
+            #bbb,
+            #bbb 10px,
+            #ccc 10px,
+            #ccc 20px
+        );
+    }
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+        align-items: center;
+    }
+    .btn {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 5px;
+        background: #007BFF;
+        color: white;
+        cursor: pointer;
+    }
+    .btn:hover {
+        background: #0069d9;
+    }
+    .dpad {
+        display: grid;
+        grid-template-areas: 
+            ". up ."
+            "left center right"
+            ". down .";
+        gap: 5px;
+    }
+    .dpad button {
+        padding: 10px;
+        background: #eee;
+        border: 1px solid #999;
+        cursor: pointer;
+    }
+    .side-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .side-buttons button {
+        padding: 8px;
+        background: #888;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
 
-<!-- Images -->
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .container {
+            flex-direction: column;
+        }
+        .left-panel {
+            max-width: none;
+            border-right: none;
+            border-bottom: 2px solid #ccc;
+        }
+    }
+</style>
+</head>
+<body>
 
-      <div class="section" id="images">
-        <h2>Images</h2>
-        <div class="row">
-          <label>Object Image:</label>
-          <input type="file" id="imageFile" accept="image/*"><br>
-          <label>Reference Image:</label>
-          <input type="file" id="refFile" accept="image/*">
+<div class="container">
+    <!-- Left Panel -->
+    <div class="left-panel">
+        <div class="section">
+            <h3>Config</h3>
+            <button class="btn-popup">Microscope Prefs</button>
+            <button class="btn-popup">Camera Prefs</button>
         </div>
-      </div>
+        <div class="section">
+            <h3>Images</h3>
+            <div class="upload">
+                <label>Load Img: <input type="file"></label>
+                <label>Load Ref: <input type="file"></label>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Output</h3>
+            <div class="outputs">
+                <div class="output-box">1</div>
+                <div class="output-box">2</div>
+                <div class="output-box">3</div>
+                <div class="output-box">4</div>
+                <div class="output-box">5</div>
+                <div class="output-box">6</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+        <div class="live-feed">
+            <div class="thumbnails">
+                <div class="thumbnail"></div>
+                <div class="thumbnail"></div>
+                <div class="thumbnail"></div>
+            </div>
+            <div class="video-area"></div>
+        </div>
+        <div class="controls">
+            <button class="btn">Capture Image</button>
+            <button class="btn">Capture Ref</button>
+            <button class="btn">Expose</button>
+            <div class="dpad">
+                <button style="grid-area: up;">↑</button>
+                <button style="grid-area: left;">←</button>
+                <button style="grid-area: center;">⚙</button>
+                <button style="grid-area: right;">→</button>
+                <button style="grid-area: down;">↓</button>
+            </div>
+            <div class="side-buttons">
+                <button>+</button>
+                <button>-</button>
+                <button>⟳</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
