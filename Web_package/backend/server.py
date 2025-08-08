@@ -219,10 +219,12 @@ async def start_camera():
         return {"error": str(e)}
 
 
+
+
 @app.get("/camera_feed")
-def video_feed():
+def camera_feed():
     def generate():
-        global camera
+        global camera, converter
         try:
             while camera and camera.IsGrabbing():
                 grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
@@ -232,15 +234,16 @@ def video_feed():
                     ret, buffer = cv2.imencode('.jpg', frame)
                     if not ret:
                         continue
-                    yield (b'--frame\r\n'
-                           b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                    yield (
+                        b'--frame\r\n'
+                        b'Content-Type: image/jpeg\r\n\r\n' +
+                        buffer.tobytes() +
+                        b'\r\n'
+                    )
                 grab_result.Release()
-        finally:
-            if camera and camera.IsGrabbing():
-                camera.StopGrabbing()
-            if camera and camera.IsOpen():
-                camera.Close()
-            camera = None
+        except Exception as e:
+            print(f"[ERROR camera_feed] Streaming interrupted: {e}")
+            yield b''
 
     return StreamingResponse(generate(), media_type='multipart/x-mixed-replace; boundary=frame')
 
@@ -288,11 +291,10 @@ def capture_image(data: dict):
 async def stop_camera():
     global camera
     try:
+        if camera and camera.IsGrabbing():
+            camera.StopGrabbing()
         if camera and camera.IsOpen():
-            if camera.IsGrabbing():
-                camera.StopGrabbing()
             camera.Close()
-            camera = None
         return {"status": "Camera stopped"}
     except Exception as e:
         return {"error": str(e)}
