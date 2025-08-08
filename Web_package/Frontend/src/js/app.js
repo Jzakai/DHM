@@ -10,6 +10,7 @@ let point2 = null;
 let imageCaptured = null 
 let refCaptured= null
 
+
 document.addEventListener("DOMContentLoaded", function () {
     let stream = null;
     const video = document.getElementById("video");
@@ -29,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     document.getElementById("stopCam").addEventListener("click", stopCamera);
+    document.getElementById("cameraStream").src = "http://192.168.1.121:8000/camera_feed";
 
 
     document.getElementById("imageFile").addEventListener("change", () => console.log("Object image selected"));
@@ -609,3 +611,4 @@ async function stopCamera() {
         console.error("Failed to stop camera on backend:", error);
     }
 }
+
