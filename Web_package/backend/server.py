@@ -4,6 +4,7 @@ import io
 from PIL import Image
 import json
 
+from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -57,8 +58,8 @@ async def run_phase_difference_endpoint(
     filter_size: int = Form(...),
     beam_type: str = Form(...),
     threshold_strength: float = Form(...),
-    image: UploadFile = File(None),
-    reference: UploadFile = File(None)
+    image: Optional[UploadFile] = File(None),
+    reference: Optional[UploadFile] = File(None)
 ):
     global image_captured, reference_captured
 
