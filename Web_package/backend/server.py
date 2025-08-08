@@ -57,8 +57,8 @@ async def run_phase_difference_endpoint(
     filter_size: int = Form(...),
     beam_type: str = Form(...),
     threshold_strength: float = Form(...),
-    image: UploadFile = File(...),
-    reference: UploadFile = File(...)
+    image: UploadFile = File(None),
+    reference: UploadFile = File(None)
 ):
     global image_captured, reference_captured
 
