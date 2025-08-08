@@ -142,7 +142,7 @@ async def compute_spectrum():
     print(phase_result)
     if phase_result is None:
         return {"error": "No phase difference computed yet."}
-    
+
     imageArray_shiftft, mask_bool, max_y, max_x = check_spectrum(phase_result)
 
     return {

@@ -36,7 +36,6 @@
 
 
   .right {
-    flex: 1;
     display: flex;
     flex-direction: column;
     background: var(--card-bg);
@@ -325,22 +324,23 @@
     box-sizing: border-box;
   }
 
-  .output-box {
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: var(--radius);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1rem;
-    text-align: center;
-    /* Let boxes fill their grid cells */
-    width: 100%;
-    height: 100%;
-    min-height: 200px;
-    /* Adjust for good height */
-  }
+ .output-box {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  display: inline-flex; /* or flex, depending on layout */
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1rem;
+  text-align: center;
+
+  /* Responsive sizing based on content */
+  width: 100%;
+  height: auto;         /* Let content define height */
+  min-height: 200px;    /* Optional: minimum height */
+  max-height: 100%;     /* Prevent overflow if necessary */
+}
 
 
   .focus-controls {
@@ -458,12 +458,12 @@
 
   .close-btn {
     position: absolute;
-    top: 10px;
-    right: 15px;
+    top: 5px;
+    right: 5px;
     font-size: 18px;
     cursor: pointer;
     background: none;
-    border: none;
+    color: red;
   }
 
   .bigOutput {

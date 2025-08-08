@@ -62,7 +62,6 @@ async function selectROI(x1, y1, x2, y2) {
         if (data.error) {
             alert(data.error);
         } else {
-            alert("ROI selected and noise reduced!");
 
 
         }
@@ -281,7 +280,6 @@ async function sendParams() {
         console.log("Phase range:", data.min, "to", data.max);
         image.psi = data.phase_image;
 
-        alert("Phase difference computed and displayed!");
     } catch (error) {
         console.error("Error:", error);
         alert("Error: " + error.message);
@@ -357,10 +355,9 @@ function startPointsSelection() {
         selectPoints(image.psi);
 
 }
-
 function selectPoints(psi) {
     if (!psi) {
-        alert("No phase image avai  lable. Please run phase difference first.");
+        alert("No phase image available. Please run phase difference first.");
         return;
     }
 
@@ -370,8 +367,19 @@ function selectPoints(psi) {
     <head>
       <title>Select Points</title>
       <style>
-        body { margin: 0; }
-        canvas { display: block; cursor: crosshair; }
+        html, body {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+        }
+        canvas {
+          display: block;
+          width: 100vw;
+          height: 100vh;
+          cursor: crosshair;
+        }
         #pixel-tooltip {
           position: fixed;
           background: rgba(0,0,0,0.7);
@@ -396,31 +404,69 @@ function selectPoints(psi) {
 
         let points = [];
 
-        img.onload = function() {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-        };
+        let imageWidth, imageHeight;
 
-        canvas.addEventListener('click', function(event) {
-          const rect = canvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          points.push({ x, y });
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          if (img.complete) {
+            drawScaledImage();
+          }
+        }
 
-          ctx.beginPath();
-          ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        function drawScaledImage() {
+          const scale = Math.min(canvas.width / imageWidth, canvas.height / imageHeight);
+          const drawWidth = imageWidth * scale;
+          const drawHeight = imageHeight * scale;
+          const offsetX = (canvas.width - drawWidth) / 2;
+          const offsetY = (canvas.height - drawHeight) / 2;
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+          // Re-draw points and lines
           ctx.fillStyle = 'red';
-          ctx.fill();
+          points.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.canvasX, p.canvasY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+          });
 
           if (points.length === 2) {
             ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            ctx.lineTo(points[1].x, points[1].y);
+            ctx.moveTo(points[0].canvasX, points[0].canvasY);
+            ctx.lineTo(points[1].canvasX, points[1].canvasY);
             ctx.strokeStyle = 'blue';
             ctx.lineWidth = 2;
             ctx.stroke();
-            
+          }
+        }
+
+        img.onload = function() {
+          imageWidth = img.width;
+          imageHeight = img.height;
+          resizeCanvas();
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+
+        canvas.addEventListener('click', function(event) {
+          const rect = canvas.getBoundingClientRect();
+          const scale = Math.min(canvas.width / imageWidth, canvas.height / imageHeight);
+          const offsetX = (canvas.width - imageWidth * scale) / 2;
+          const offsetY = (canvas.height - imageHeight * scale) / 2;
+
+          const x = (event.clientX - rect.left - offsetX) / scale;
+          const y = (event.clientY - rect.top - offsetY) / scale;
+
+          const canvasX = event.clientX - rect.left;
+          const canvasY = event.clientY - rect.top;
+
+          points.push({ x, y, canvasX, canvasY });
+
+          drawScaledImage();
+
+          if (points.length === 2) {
             window.opener.receivePoints(points[0], points[1]);
             setTimeout(() => window.close(), 1000);
           }
@@ -428,21 +474,28 @@ function selectPoints(psi) {
 
         canvas.addEventListener('mousemove', function(event) {
           const rect = canvas.getBoundingClientRect();
-          const x = Math.floor(event.clientX - rect.left);
-          const y = Math.floor(event.clientY - rect.top);
-          if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
-            const pixel = ctx.getImageData(x, y, 1, 1).data;
+          const scale = Math.min(canvas.width / imageWidth, canvas.height / imageHeight);
+          const offsetX = (canvas.width - imageWidth * scale) / 2;
+          const offsetY = (canvas.height - imageHeight * scale) / 2;
+
+          const x = Math.floor((event.clientX - rect.left - offsetX) / scale);
+          const y = Math.floor((event.clientY - rect.top - offsetY) / scale);
+
+          const tooltip = document.getElementById('pixel-tooltip');
+
+          if (x >= 0 && x < imageWidth && y >= 0 && y < imageHeight) {
+            const pixel = ctx.getImageData(event.clientX - rect.left, event.clientY - rect.top, 1, 1).data;
             const [r, g, b, a] = pixel;
-            const tooltip = document.getElementById('pixel-tooltip');
             tooltip.textContent = \`(\${x}, \${y}): R=\${r} G=\${g} B=\${b} A=\${a}\`;
             tooltip.style.left = \`\${event.clientX + 10}px\`;
             tooltip.style.top = \`\${event.clientY + 10}px\`;
+          } else {
+            tooltip.textContent = '';
           }
         });
 
         canvas.addEventListener('mouseleave', () => {
-          const tooltip = document.getElementById('pixel-tooltip');
-          tooltip.textContent = '';
+          document.getElementById('pixel-tooltip').textContent = '';
         });
       <\/script>
     </body>
@@ -533,7 +586,6 @@ async function selectROI(x1, y1, x2, y2) {
               <img src="data:image/png;base64,${data.roi_image}" style="max-width:100%; border:1px solid #ccc;">
             `;
 
-            alert("ROI selected and noise reduced!");
         }
     } catch (error) {
         console.error("Error selecting ROI:", error);
