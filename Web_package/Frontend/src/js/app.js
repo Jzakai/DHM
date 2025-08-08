@@ -25,13 +25,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     document.getElementById("openCam").addEventListener("click", initializeCamera);
+    
+
     document.getElementById("setExposureBtn").addEventListener("click", setExposure);
     document.getElementById("captureImageBtn").addEventListener("click", captureImage);
 
-
     document.getElementById("stopCam").addEventListener("click", stopCamera);
     document.getElementById("cameraStream").src = "http://192.168.1.121:8000/camera_feed";
-
+    
 
     document.getElementById("imageFile").addEventListener("change", () => console.log("Object image selected"));
     document.getElementById("refFile").addEventListener("change", () => console.log("Reference image selected"));
