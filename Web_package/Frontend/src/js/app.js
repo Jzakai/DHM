@@ -6,13 +6,13 @@ let image = {
 
 let point1 = null;
 let point2 = null;
-
 let imageCaptured = null 
 let refCaptured= null
+let stream = null;
 
 
 document.addEventListener("DOMContentLoaded", function () {
-    let stream = null;
+    
     const video = document.getElementById("video");
     const padStatus = document.getElementById("pad-status");
 
@@ -24,14 +24,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const phaseImage = document.getElementById("phaseImage");
 
 
-    document.getElementById("openCam").addEventListener("click", initializeCamera);
+    document.getElementById("openCam").addEventListener("click", (e) => { e.preventDefault(); initializeCamera(); });
+    document.getElementById("cameraStream").src = "http://192.168.1.121:8000/camera_feed";
     
 
-    document.getElementById("setExposureBtn").addEventListener("click", setExposure);
-    document.getElementById("captureImageBtn").addEventListener("click", captureImage);
-
-    document.getElementById("stopCam").addEventListener("click", stopCamera);
-    document.getElementById("cameraStream").src = "http://192.168.1.121:8000/camera_feed";
+    document.getElementById("setExposureBtn").addEventListener("click",(e) => { e.preventDefault(); setExposure(); });
+    document.getElementById("captureImageBtn").addEventListener("click", (e) => { e.preventDefault(); captureImage(); });
+    document.getElementById("stopCam").addEventListener("click",(e) => { e.preventDefault(); stopCamera(); });
+    
     
 
     document.getElementById("imageFile").addEventListener("change", () => console.log("Object image selected"));
