@@ -231,7 +231,11 @@ def camera_feed():
                 if grab_result.GrabSucceeded():
                     image = converter.Convert(grab_result)
                     frame = image.GetArray()
-                    ret, buffer = cv2.imencode('.jpg', frame)
+
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
+                    ret, buffer = cv2.imencode('.jpg', frame_rgb)
+
                     if not ret:
                         continue
                     yield (
