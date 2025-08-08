@@ -6,13 +6,13 @@ let image = {
 
 let point1 = null;
 let point2 = null;
-let imageCaptured = null 
-let refCaptured= null
+let imageCaptured = null
+let refCaptured = null
 let stream = null;
 
 
 document.addEventListener("DOMContentLoaded", function () {
-    
+
     const video = document.getElementById("video");
     const padStatus = document.getElementById("pad-status");
 
@@ -25,22 +25,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     document.getElementById("openCam").addEventListener("click", (e) => { e.preventDefault(); initializeCamera(); });
-    
 
-    document.getElementById("setExposureBtn").addEventListener("click",(e) => { e.preventDefault(); setExposure(); });
+
+    document.getElementById("setExposureBtn").addEventListener("click", (e) => { e.preventDefault(); setExposure(); });
     document.getElementById("captureImageBtn").addEventListener("click", (e) => { e.preventDefault(); captureImage(); });
-    document.getElementById("stopCam").addEventListener("click",(e) => { e.preventDefault(); stopCamera(); });
-    
-    
+    document.getElementById("stopCam").addEventListener("click", (e) => { e.preventDefault(); stopCamera(); });
+
+
 
     document.getElementById("imageFile").addEventListener("change", () => console.log("Object image selected"));
     document.getElementById("refFile").addEventListener("change", () => console.log("Reference image selected"));
     document.getElementById("1dbtn").addEventListener("click", (e) => { e.preventDefault(); startPointsSelection() });
 
-    document.getElementById("checkSpectrum").addEventListener("click", () => alert("Check Spectrum clicked"));
     document.getElementById("phaseDiff").addEventListener("click", (e) => { e.preventDefault(); sendParams(); });
     document.getElementById("selectRoiBtn").addEventListener("click", startROISelection);
     document.getElementById("3dbtn").addEventListener("click", fetch3DPlot);
+    document.getElementById("checkSpectrum").addEventListener("click", fetchSpectrum);
+
     document.getElementById("runAll").addEventListener("click", () => alert("Run All sequence started"));
     document.getElementById("2dbtn").addEventListener("click", () => alert("2dbtn clicked"));
     document.getElementById('mainGallery').addEventListener('click', () => {
@@ -187,36 +188,36 @@ async function sendParams() {
 
     const imageFile = document.getElementById("imageFile").files[0];
     const refFile = document.getElementById("refFile").files[0];
-    if ((!imageFile && !refFile) && (!imageCaptured && !refCaptured) ) {
+    if ((!imageFile && !refFile) && (!imageCaptured && !refCaptured)) {
         alert("Please select both image and reference files or capture via the live camera");
         return;
     }
-    if (!imageFile && !imageCaptured ) {
+    if (!imageFile && !imageCaptured) {
         alert("You only have a refference. Please select an image file or capture image via the live camera");
         return;
     }
 
-    if (!refFile && !refCaptured ) {
+    if (!refFile && !refCaptured) {
         alert("You only have an image. Please select a refference file or capture a refference via the live camera");
         return;
     }
 
-    if (refFile && !imageFile ) {
+    if (refFile && !imageFile) {
         alert("You only have a refference file uploaded. Please select an image file.");
         return;
     }
 
-    if (!refFile && imageFile ) {
+    if (!refFile && imageFile) {
         alert("You only have an image file uploaded. Please select a refference file");
         return
     }
 
     if (imageFile) {
-    formData.append("image", imageFile);
-    }  
+        formData.append("image", imageFile);
+    }
 
     if (refFile) {
-    formData.append("reference", refFile);
+        formData.append("reference", refFile);
     }
 
 
@@ -287,6 +288,27 @@ async function sendParams() {
     }
 }
 
+
+async function fetchSpectrum() {
+    try {
+        const response = await fetch("http://192.168.1.121:8000/check_spectrum");
+        const data = await response.json();
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        alert(data.imageArray_shiftft, data.mask_bool, data.max_y, data.max_x)
+        const spectrumOutput = document.getElementById("spectrumOutput")
+        spectrumOutput.innerHTML = `<div id="spectrumOutput" style="width:100%; height:100%;"></div>`;
+       
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error: " + error.message);
+    }
+
+
+}
 //recieves information returned from backend after 3d computation
 async function fetch3DPlot() {
     try {
@@ -599,7 +621,7 @@ async function captureImage() {
             alert(`Captured and set image as ${type}`);
             imageCaptured = true
         }
-         else {
+        else {
             alert("Capture failed");
         }
     } catch (error) {

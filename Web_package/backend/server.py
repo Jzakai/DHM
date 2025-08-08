@@ -21,7 +21,7 @@ from pydantic import BaseModel
 
 import plotly.graph_objs as go
 import plotly.io as pio
-from sys_functions import (compute_3d_thickness, get_phase_difference, reduce_noise, compute_1d_thickness)
+from sys_functions import (compute_3d_thickness, get_phase_difference, check_spectrum, reduce_noise, compute_1d_thickness)
 
 
 app = FastAPI()
@@ -133,6 +133,24 @@ async def compute_3d_endpoint():
         "z": Z.tolist()
     }
 
+
+
+@app.get("/check_spectrum")
+async def compute_spectrum():
+    phase_result = get_phase_difference()
+
+    print(phase_result)
+    if phase_result is None:
+        return {"error": "No phase difference computed yet."}
+    
+    imageArray_shiftft, mask_bool, max_y, max_x = check_spectrum(phase_result)
+
+    return {
+        "imageArray_shiftft": imageArray_shiftft.tolist(),
+        "mask_bool": mask_bool.tolist(),
+        "max_y": max_y.tolist(),
+        "max_x": max_x.tolist()
+    }
 
 
 
