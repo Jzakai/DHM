@@ -7,6 +7,9 @@ let image = {
 let point1 = null;
 let point2 = null;
 
+let imageCaptured = null 
+let refCaptured= null
+
 document.addEventListener("DOMContentLoaded", function () {
     let stream = null;
     const video = document.getElementById("video");
@@ -196,15 +199,13 @@ async function sendParams() {
         return;
     }
 
-    if (imageFile)
-        formData.append("image", imageFile);
-    else
-        formData.append("image", null);
+    if (imageFile) {
+    formData.append("image", imageFile);
+    }  
 
-    if(refFile)
-        formData.append("reference", refFile);
-    else
-        formData.append("image", null);
+    if (refFile) {
+    formData.append("reference", refFile);
+    }
 
 
 
@@ -567,8 +568,7 @@ async function setExposure() {
     }
 }
 
-imageCaptured = false 
-refCaptured= false
+
 
 async function captureImage() {
     const type = document.getElementById("captureType").value; // "object" or "reference"
