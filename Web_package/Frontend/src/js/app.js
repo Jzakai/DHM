@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     document.getElementById("openCam").addEventListener("click", (e) => { e.preventDefault(); initializeCamera(); });
-    document.getElementById("cameraStream").src = "http://192.168.1.121:8000/camera_feed";
     
 
     document.getElementById("setExposureBtn").addEventListener("click",(e) => { e.preventDefault(); setExposure(); });
@@ -610,16 +609,12 @@ async function captureImage() {
 }
 
 async function stopCamera() {
-    if (stream) {
-        stream.getTracks().forEach(t => t.stop());
-        video.srcObject = null;
-        stream = null;
-    }
-
     try {
+        document.getElementById("cameraStream").src = "";  // Stop image
         await fetch("http://192.168.1.121:8000/stop_camera");
     } catch (error) {
         console.error("Failed to stop camera on backend:", error);
     }
 }
+
 
