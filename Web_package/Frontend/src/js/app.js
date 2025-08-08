@@ -201,6 +201,16 @@ async function sendParams() {
         return;
     }
 
+    if (refFile && !imageFile ) {
+        alert("You only have a refference file uploaded. Please select an image file.");
+        return;
+    }
+
+    if (!refFile && imageFile ) {
+        alert("You only have an image file uploaded. Please select a refference file");
+        return
+    }
+
     if (imageFile) {
     formData.append("image", imageFile);
     }  
