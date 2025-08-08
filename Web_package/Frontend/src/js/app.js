@@ -6,9 +6,13 @@ let image = {
 
 let point1 = null;
 let point2 = null;
+let imageCaptured = null 
+let refCaptured= null
+let stream = null;
+
 
 document.addEventListener("DOMContentLoaded", function () {
-    let stream = null;
+    
     const video = document.getElementById("video");
     const padStatus = document.getElementById("pad-status");
 
@@ -20,18 +24,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const phaseImage = document.getElementById("phaseImage");
 
 
-    document.getElementById("openCam").addEventListener("click", initializeCamera);
-    document.getElementById("setExposureBtn").addEventListener("click", setExposure);
-    document.getElementById("captureImageBtn").addEventListener("click", captureImage);
+    document.getElementById("openCam").addEventListener("click", (e) => { e.preventDefault(); initializeCamera(); });
+    
 
-
-    document.getElementById("stopCam").addEventListener("click", () => {
-        if (stream) {
-            stream.getTracks().forEach(t => t.stop());
-            video.srcObject = null;
-            stream = null;
-        }
-    });
+    document.getElementById("setExposureBtn").addEventListener("click",(e) => { e.preventDefault(); setExposure(); });
+    document.getElementById("captureImageBtn").addEventListener("click", (e) => { e.preventDefault(); captureImage(); });
+    document.getElementById("stopCam").addEventListener("click",(e) => { e.preventDefault(); stopCamera(); });
+    
+    
 
     document.getElementById("imageFile").addEventListener("change", () => console.log("Object image selected"));
     document.getElementById("refFile").addEventListener("change", () => console.log("Reference image selected"));
@@ -187,12 +187,39 @@ async function sendParams() {
 
     const imageFile = document.getElementById("imageFile").files[0];
     const refFile = document.getElementById("refFile").files[0];
-    if (!imageFile || !refFile) {
-        alert("Please select both image and reference files.");
+    if ((!imageFile && !refFile) && (!imageCaptured && !refCaptured) ) {
+        alert("Please select both image and reference files or capture via the live camera");
         return;
     }
+    if (!imageFile && !imageCaptured ) {
+        alert("You only have a refference. Please select an image file or capture image via the live camera");
+        return;
+    }
+
+    if (!refFile && !refCaptured ) {
+        alert("You only have an image. Please select a refference file or capture a refference via the live camera");
+        return;
+    }
+
+    if (refFile && !imageFile ) {
+        alert("You only have a refference file uploaded. Please select an image file.");
+        return;
+    }
+
+    if (!refFile && imageFile ) {
+        alert("You only have an image file uploaded. Please select a refference file");
+        return
+    }
+
+    if (imageFile) {
     formData.append("image", imageFile);
+    }  
+
+    if (refFile) {
     formData.append("reference", refFile);
+    }
+
+
 
     try {
         const response = await fetch("http://192.168.1.121:8000/run_phase_difference", {
@@ -532,6 +559,7 @@ async function initializeCamera() {
     }
 }
 
+
 async function setExposure() {
     const exposureValue = document.getElementById("exposureInput").value;
     try {
@@ -552,6 +580,8 @@ async function setExposure() {
     }
 }
 
+
+
 async function captureImage() {
     const type = document.getElementById("captureType").value; // "object" or "reference"
     try {
@@ -561,9 +591,15 @@ async function captureImage() {
             body: JSON.stringify({ type: type })
         });
         const data = await res.json();
-        if (data.success) {
+        if (data.success_ref) {
             alert(`Captured and set image as ${type}`);
-        } else {
+            refCaptured = true
+        }
+        else if (data.success_img) {
+            alert(`Captured and set image as ${type}`);
+            imageCaptured = true
+        }
+         else {
             alert("Capture failed");
         }
     } catch (error) {
@@ -571,3 +607,14 @@ async function captureImage() {
         alert("Error capturing image: " + error.message);
     }
 }
+
+async function stopCamera() {
+    try {
+        document.getElementById("cameraStream").src = "";  // Stop image
+        await fetch("http://192.168.1.121:8000/stop_camera");
+    } catch (error) {
+        console.error("Failed to stop camera on backend:", error);
+    }
+}
+
+

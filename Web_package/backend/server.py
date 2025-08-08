@@ -4,6 +4,7 @@ import io
 from PIL import Image
 import json
 
+from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -28,7 +29,8 @@ app = FastAPI()
 #globals
 roi_phase = None
 roi_coords = None
-
+reference_captured = None
+image_captured = None
 
 
 # Enable CORS (for frontend fetch calls)
@@ -56,13 +58,31 @@ async def run_phase_difference_endpoint(
     filter_size: int = Form(...),
     beam_type: str = Form(...),
     threshold_strength: float = Form(...),
-    image: UploadFile = File(...),
-    reference: UploadFile = File(...)
+    image: Optional[UploadFile] = File(None),
+    reference: Optional[UploadFile] = File(None)
 ):
-    # Convert uploaded images to numpy arrays
-    image_np = read_imagefile(await image.read())
-    reference_np = read_imagefile(await reference.read())
+    global image_captured, reference_captured
 
+    # Block if nothing is provided
+    if image is None and reference is None and image_captured is None and reference_captured is None:
+        return JSONResponse(content={"error": "No image or reference provided."}, status_code=400)
+
+    # Priority to uploaded files if present
+    if image is not None:
+        image_np = read_imagefile(await image.read())
+    elif image_captured is not None:
+        image_np = image_captured
+    else:
+        return JSONResponse(content={"error": "Missing object image."}, status_code=400)
+
+    if reference is not None:
+        reference_np = read_imagefile(await reference.read())
+    elif reference_captured is not None:
+        reference_np = reference_captured
+    else:
+        return JSONResponse(content={"error": "Missing reference image."}, status_code=400)
+    
+    
     # Set parameters globally
     params_dict = {
         "wavelength": wavelength,
@@ -170,11 +190,20 @@ from pypylon import pylon
 
 camera = None
 converter = None
+reference = None
+image_np = None
 
 @app.get("/start_camera")
 async def start_camera():
     global camera, converter
+
     try:
+        # Close previous camera connection if exists
+        if camera and camera.IsOpen():
+            if camera.IsGrabbing():
+                camera.StopGrabbing()
+            camera.Close()
+
         camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
         camera.Open()
         camera.ExposureAuto.SetValue('Off')
@@ -193,20 +222,27 @@ async def start_camera():
 @app.get("/camera_feed")
 def video_feed():
     def generate():
-        while camera and camera.IsGrabbing():
-            grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-            if grab_result.GrabSucceeded():
-                image = converter.Convert(grab_result)
-                frame = image.GetArray()
-                ret, buffer = cv2.imencode('.jpg', frame)
-                if not ret:
-                    continue
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-            grab_result.Release()
+        global camera
+        try:
+            while camera and camera.IsGrabbing():
+                grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+                if grab_result.GrabSucceeded():
+                    image = converter.Convert(grab_result)
+                    frame = image.GetArray()
+                    ret, buffer = cv2.imencode('.jpg', frame)
+                    if not ret:
+                        continue
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                grab_result.Release()
+        finally:
+            if camera and camera.IsGrabbing():
+                camera.StopGrabbing()
+            if camera and camera.IsOpen():
+                camera.Close()
+            camera = None
 
     return StreamingResponse(generate(), media_type='multipart/x-mixed-replace; boundary=frame')
-
 
 @app.post("/set_exposure")
 def set_exposure(exposure: dict):
@@ -224,7 +260,7 @@ def set_exposure(exposure: dict):
 
 @app.post("/capture_image")
 def capture_image(data: dict):
-    global camera, converter, last_frame, reference, image_np
+    global camera, converter, last_frame, reference_captured, image_captured
     try:
         if not camera.IsGrabbing():
             return {"error": "Camera not running"}
@@ -234,16 +270,33 @@ def capture_image(data: dict):
             frame = img.GetArray()
             last_frame = frame
             if data["type"] == "reference":
-                reference = frame
+                reference_captured = frame
+                return {"success_ref": "refference captured"}
+                
             elif data["type"] == "object":
-                image_np = frame
+                image_captured = frame
+                return {"success_img": "img captured"}
+                
             else:
                 return {"error": "Invalid type"}
-            return {"success": True}
         else:
             return {"error": "Failed to grab image"}
     except Exception as e:
         return {"error": str(e)}
+    
+@app.get("/stop_camera")
+async def stop_camera():
+    global camera
+    try:
+        if camera and camera.IsOpen():
+            if camera.IsGrabbing():
+                camera.StopGrabbing()
+            camera.Close()
+            camera = None
+        return {"status": "Camera stopped"}
+    except Exception as e:
+        return {"error": str(e)}
+
 
 # Calculate absolute path to frontend folder
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "Frontend", "src")
