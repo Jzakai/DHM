@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const phaseImage = document.getElementById("phaseImage");
 
 
-    document.getElementById("openCam").addEventListener("click", initializeCamera);
+    document.getElementById("openCam").addEventListener("click", (e) => { e.preventDefault(); initializeCamera(); });
 
     document.getElementById("setExposureBtn").addEventListener("click",(e) => { e.preventDefault(); setExposure(); });
     document.getElementById("captureImageBtn").addEventListener("click", (e) => { e.preventDefault(); captureImage(); });

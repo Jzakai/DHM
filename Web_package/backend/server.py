@@ -221,19 +221,32 @@ async def start_camera():
 
 
 @app.get("/camera_feed")
-def video_feed():
+def camera_feed():
     def generate():
-        while camera and camera.IsGrabbing():
-            grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-            if grab_result.GrabSucceeded():
-                image = converter.Convert(grab_result)
-                frame = image.GetArray()
-                ret, buffer = cv2.imencode('.jpg', frame)
-                if not ret:
-                    continue
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-            grab_result.Release()
+        global camera, converter
+        try:
+            while camera and camera.IsGrabbing():
+                grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+                if grab_result.GrabSucceeded():
+                    image = converter.Convert(grab_result)
+                    frame = image.GetArray()
+
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
+                    ret, buffer = cv2.imencode('.jpg', frame_rgb)
+
+                    if not ret:
+                        continue
+                    yield (
+                        b'--frame\r\n'
+                        b'Content-Type: image/jpeg\r\n\r\n' +
+                        buffer.tobytes() +
+                        b'\r\n'
+                    )
+                grab_result.Release()
+        except Exception as e:
+            print(f"[ERROR camera_feed] Streaming interrupted: {e}")
+            yield b''
 
     return StreamingResponse(generate(), media_type='multipart/x-mixed-replace; boundary=frame')
 
