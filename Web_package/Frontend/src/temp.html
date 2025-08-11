@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microscope Control Panel</title>
+    <link rel="stylesheet" href="css/temp.css" />
+
+</head>
+
+<body>
+
+    <div class="main-container">
+        <div class="left">
+            <div class="configuration">
+                <h2>configuration</h2>
+                <button id="microscope-parameters">Microscope Parameters</button>
+                <button id="communication-parameters">Communication Parameters</button>
+            </div>
+            <div class="images">
+                <h2>Images</h2>
+                <label>Object Image:</label>
+                <input type="file" id="image-file" accept="image/*"><br>
+                <label>Reference Image:</label>
+                <input type="file" id="reference-file" accept="image/*">
+            </div>
+            <div class="outputs">
+                <h2>Captured Output</h2>
+                <div class="outputs-container">
+                    <div class="output-box">
+                        <h3>Phase</h3>
+                        <div class="output-image" id="phase-output"></div>
+                        <button class="output-button">Compute</button>
+                    </div>
+
+                    <div class="output-box">
+                        <h3>ROI</h3>
+                        <div class="output-image" id="roi-output"></div>
+                        <button class="output-button">Compute</button>
+                    </div>
+
+                    <div class="output-box">
+                        <h3>3D</h3>
+                        <div class="output-image" id="3d-output"></div>
+                        <button class="output-button">Compute</button>
+                    </div>
+
+                    <div class="output-box">
+                        <h3>1D</h3>
+                        <div class="output-image" id="1d-output"></div>
+                        <button class="output-button">Compute</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="right">
+            <div class="camera">
+
+                <div class="camera-feed">
+                    <div class="camera-controls-bar top-bar">
+                        <button id="start-camera">Start Camera</button>
+                        <button id="stop-camera">Stop Camera</button>
+                        <button id="freeze-frame">Freeze Frame</button>
+                        <label for="exposure">Exposure:</label>
+                        <input type="number" id="exposure" name="exposure" min="0" max="100" step="1" value="50">
+                    </div>
+
+                    <div id="camera-feed-view"></div>
+
+                    <div class="camera-controls-bar bottom-bar">
+                        <button id="capture-image">Capture Image</button>
+                        <button id="capture-reference">Capture Reference</button>
+                    </div>
+                </div>
+
+
+                <div class="camera-controls">
+                    <div class="control-pad-container" id="control-pad">
+                        <button id="control-pad-up">↑</button>
+                        <button id="control-pad-right">→</button>
+                        <button id="control-pad-home">⌂</button>
+                        <button id="control-pad-down">↓</button>
+                        <button id="control-pad-left">←</button>
+                    </div>
+                    <div class="focus-buttons-container" id="focus-buttons">
+                        <button id="focus-buttons-up">↑</button>
+                        <button id="focus-buttons-down">↓</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

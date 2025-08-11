@@ -1,0 +1,266 @@
+/* temp.css */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
+
+.main-container {
+    display: flex;
+    width: 100%;
+    height: 100vh; /* Full viewport height */
+}
+
+.left{
+    flex: 1; /* Each takes 50% of the width */
+    height: 100%;
+    overflow: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: aqua;
+}
+
+
+.right {
+    flex: 1; /* Each takes 50% of the width */
+    height: 100%;
+    overflow: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: rosybrown;
+}
+
+
+/* Colored divs for clarity */
+.configuration {
+    background-color: #f9c74f;  /* Yellow */
+    min-height: 60px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.images {
+    background-color: #90be6d;  /* Green */
+    min-height: 80px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.outputs{
+    background-color: #f94144;  /* Red */
+    min-height: 80px;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.outputs-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    grid-template-rows: repeat(2, auto);   /* 2 rows */
+    gap: 10px;
+    background-color: #f94144;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+
+.output-box {
+    background-color: gray;
+    min-height: 80px;
+    padding: 10px;
+    border-radius: 4px;
+
+    display: flex;
+    flex-direction: column;      /* stack vertically */
+    align-items: center;         /* center horizontally */
+    justify-content: center;     /* center vertically */
+}
+
+
+.output-image{
+    background-color: green;
+    width: 100px;
+    height: 100px;
+}
+
+.output-button {
+    /* will inherit general button styles below */
+}
+
+.camera-feed {
+    background-color: #577590;  /* Blue */
+    min-height: 150px;
+    margin-bottom: 10px;
+    padding: 10px;
+    padding-top: 50px;           /* add space for top bar */
+    padding-bottom: 50px;        /* add space for bottom bar */
+    border-radius: 4px;
+    position: relative;          /* needed for absolute bars */
+    box-sizing: border-box;
+
+    display: flex;               /* enable flexbox */
+    justify-content: center;     /* center horizontally */
+    flex-direction: column;      /* keep items stacked vertically */
+    align-items: center;         /* center items horizontally */
+}
+
+/* Top bar container inside camera-feed */
+.camera-controls-bar {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background-color: rgba(0,0,0,0.6); /* semi-transparent black */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+/* Top bar specific */
+.camera-controls-bar.top-bar {
+    top: 0;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+/* Bottom bar specific */
+.camera-controls-bar.bottom-bar {
+    bottom: 0;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+/* Buttons styling for camera controls bar and all other buttons except pad and focus */
+.camera-controls-bar button,
+button:not(.control-pad-container button):not(.focus-buttons-container button) {
+    background-color: #43aa8b; /* teal */
+    border: none;
+    border-radius: 4px;
+    color: white;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.camera-controls-bar button:hover,
+button:not(.control-pad-container button):not(.focus-buttons-container button):hover {
+    background-color: #359173;
+}
+
+/* Exposure input styling */
+.camera-controls-bar label {
+    color: white;
+    font-size: 14px;
+}
+
+.camera-controls-bar input[type="number"] {
+    width: 60px;
+    padding: 4px;
+    border-radius: 4px;
+    border: none;
+    font-size: 14px;
+    text-align: center;
+}
+
+
+.camera-controls {
+    display: flex;
+    gap: 10px;
+}
+
+#camera-feed-view {
+    width: 100%;       /* or any max-width you want */
+    max-width: 960px;  /* limit max size */
+    height: auto;      /* auto height keeps aspect ratio */
+    aspect-ratio: 16 / 9; /* modern browsers support this */
+    background-color: #000; /* optional, to visualize */
+}
+
+
+.control-pad-container {
+    background-color: #43aa8b;  /* Teal */
+    flex: 1;
+    min-height: 60px;
+    padding: 10px;
+    border-radius: 4px;
+
+    display: grid;
+    grid-template-columns: 50px 50px 50px;
+    grid-template-rows: 50px 50px 50px;
+    gap: 5px;
+    justify-content: center;
+    align-content: center;
+}
+
+/* Position buttons in the grid */
+#control-pad-up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+#control-pad-left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+#control-pad-home {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+#control-pad-right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+#control-pad-down {
+    grid-column: 2;
+    grid-row: 3;
+}
+
+/* Button styling for control pad buttons */
+.control-pad-container button {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.focus-buttons-container {
+    background-color: #f3722c;  /* Orange */
+    flex: 1;
+    min-height: 60px;
+    padding: 10px;
+    border-radius: 4px;
+
+    display: flex;
+    flex-direction: column;  /* stack vertically */
+    justify-content: center; /* center vertically */
+    align-items: center;     /* center horizontally */
+    gap: 10px;               /* space between buttons */
+}
+
+/* Button styling for focus buttons */
+.focus-buttons-container button {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
