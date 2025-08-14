@@ -22,7 +22,8 @@ from matplotlib.widgets import RectangleSelector
 #fixed problem with functionss & variables assigment / now able to use run all many times without problems
 #did some refactoring
 #fixed roi selection by making all windows top level
-
+import sysconfig; print(sysconfig.get_path("scripts"))
+import site; print(site.USER_BASE + "\\Scripts")
 #global variables initialization
 root = tk.Tk()
 
